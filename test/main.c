@@ -1,16 +1,7 @@
-// windows deprecated warnings
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
+#define _CRT_SECURE_NO_WARNINGS // windows deprecation warnings
 #include <stdio.h>
 #define HIRZEL_UTIL_FILE_I
 #include <hirzel/util/file.h>
-
-void test(int *p)
-{
-	*p = 0;
-}
 
 int main()
 {
@@ -25,6 +16,6 @@ int main()
 	}
 
 	hzl_file_free_lines(lines);
-	printf("Val: %p\n", lines);
+	lines = 0;
 	return 0;
 }

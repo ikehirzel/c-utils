@@ -25,7 +25,7 @@ extern char** hzl_file_read_lines(const char* file);
 extern void hzl_file_free_lines(char** lines);
 #endif
 
-#define HIRZEL_UTIL_FILE_I
+#define HIRZEL_UTIL_FILE_I // test code for ide
 
 #ifdef HIRZEL_UTIL_FILE_I
 #undef HIRZEL_UTIL_FILE_I
@@ -59,31 +59,33 @@ char **hzl_file_read_lines(const char *file)
 {
 	// open file stream
 	FILE *stream = fopen(file, "r");
-	// safeguard file read failure
 	if (!stream) return NULL;
-	// setting eof flag if empty
-	char c = getc(stream);
-	rewind(stream);
+	if (ferror(stream))
+	{
+		perror("File error");
+	}
+	// safeguard file read failure
 	// tmp buffer to store lines
 	char *buf[32];
 	int bufc = 0;
 	// null terminated lines array
 	char **lines = NULL;
-	// pointing iterator to base of stack
-	char* cur = buf[0];
+	// holds pointer to current line
+	char* cur = NULL;
 	// initialized to 1 for null termination
 	size_t linec = 1;
 
 	do
 	{
-		cur = (buf[bufc++] = hzl_file_read_line(stream));
+		cur = hzl_file_read_line(stream);
+		buf[bufc++] = cur;
 		printf("cur: %s\n", cur);
 		// buf is full or line is empty, store buffer
 		if (bufc >= 32 || !cur)
 		{
 			// allocate more memory (previous line count + lines in stack - 1(if line was invalid))
 			char **tmp = malloc((linec + bufc - !cur) * sizeof(char*));
-			printf("Allocating %zu\n", linec + bufc - !cur);
+			printf("Allocating %zu lines\n", linec + bufc - !cur);
 			// null terminate buffer
 			tmp[linec + bufc - 1] = NULL;
 			// if there is data in output buffer
@@ -102,12 +104,22 @@ char **hzl_file_read_lines(const char *file)
 			linec += bufc;
 			// rebase iterator
 			bufc = 0;
+			puts("End");
 		}
 	}
 	while(cur);
 
+	puts("Done with loop");
+
+	printf("Pos: %ld\n", ftell(stream));
+	printf("EOF: %d\n", feof(stream));
 	// closing file
-	fclose(stream);
+	if (fclose(stream))
+	{
+		fputs("File failed to close!", stderr);
+	}
+
+	puts("File closed");
 
 	// return buffer
 	return lines;
@@ -115,10 +127,17 @@ char **hzl_file_read_lines(const char *file)
 
 char *hzl_file_read_line(FILE *stream)
 {
+	if (!stream) return NULL;
 	// checking if eof
 	char c = getc(stream);
 	// returning null on fail
-	if (c == EOF || !stream) return NULL;
+	if (c == EOF)
+	{
+		if (c == EOF) puts("Read line EOF!!!");
+		// fclose(stream);
+		// puts("Closed file");
+		return NULL;
+	}
 	// putting char back in stream
 	ungetc(c, stream);
 	// temporary buffer
@@ -171,8 +190,6 @@ void hzl_file_free_lines(char **lines)
 		free(*pos);
 	}
 	free(lines);
-	char *linesp = &lines;
-	*linesp = NULL;
 }
 
 #endif
