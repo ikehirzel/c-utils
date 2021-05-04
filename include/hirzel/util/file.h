@@ -2,15 +2,19 @@
 #define HIRZEL_UTIL_FILE_H
 #include <stdio.h>
 
-extern char* hzl_file_read(const char* file, const char* options);
-inline char* hzl_file_read_raw(const char* file)
-{
-	return hzl_file_read(file, "rb");
-}
-inline char* hzl_file_read_text(const char* file)
-{
-	return hzl_file_read(file, "r");
-}
+/**
+ * @brief Reads a file into a string
+ * 
+ * The string is dynamically allocated and must be freed
+ * 
+ * @param	filepath	path to file
+ * @param	options		options used in fopen: "r", "rb", etc..
+ * @return	pointer to string
+ */
+extern char* hxfile_read(const char* filepath, const char* options);
+
+#define hxfile_read_text(filepath) hxfile_read(filepath, "r")
+#define hxfile_read_raw(filepath) hxfile_read(filepath, "rb")
 
 /**
  * @brief Reads line from file stream till newline
@@ -18,14 +22,27 @@ inline char* hzl_file_read_text(const char* file)
  * The memory for the stream is dynamically allocated and must be freed
  * 
  * @param	stream	file stream
- * @return	pointer to malloc'd string
+ * @return	pointer to string
  */
-extern char* hzl_file_read_line(FILE* stream);
-extern char** hzl_file_read_lines(const char* file);
-extern void hzl_file_free_lines(char** lines);
-#endif
+extern char* hxfile_read_line(FILE* stream);
 
-#define HIRZEL_UTIL_FILE_I // test code for ide
+/**
+ * @brief Reads lines from file in text mode
+ * 
+ * The buffer returned must be freed by hxfile_free_lines
+ * 
+ * @param	filepath	path to file to read
+ * @return	buffer of null terminated lines array
+ */
+extern char** hxfile_read_lines(const char* filepath);
+
+/**
+ * @brief Frees lines gotten from hxfile_read_lines()
+ * @param	lines	buffer to be freed
+ */
+extern void hxfile_free_lines(char** lines);
+
+#endif
 
 #ifdef HIRZEL_UTIL_FILE_I
 #undef HIRZEL_UTIL_FILE_I
@@ -34,7 +51,7 @@ extern void hzl_file_free_lines(char** lines);
 #include <stdlib.h>
 #include <string.h>
 
-char* hzl_file_read(const char* file, const char* options)
+char* hxfile_read(const char* file, const char* options)
 {
 	// open file stream
 	FILE* stream = fopen(file, options);
@@ -55,89 +72,48 @@ char* hzl_file_read(const char* file, const char* options)
 	return str;
 }
 
-char **hzl_file_read_lines(const char *file)
+char **hxfile_read_lines(const char *file)
 {
-	// open file stream
-	FILE *stream = fopen(file, "r");
-	if (!stream) return NULL;
-	if (ferror(stream))
+	// read file
+	char* text = hxfile_read_text(file);
+	if (!text) return NULL;
+
+	// iterator
+	const char* pos = text;
+	size_t linec = 0;
+
+	// iterating to end
+	while (*pos)
 	{
-		perror("File error");
+		if (*pos++ == '\n') ++linec;
 	}
-	// safeguard file read failure
-	// tmp buffer to store lines
-	char *buf[32];
-	int bufc = 0;
-	// null terminated lines array
-	char **lines = NULL;
-	// holds pointer to current line
-	char* cur = NULL;
-	// initialized to 1 for null termination
-	size_t linec = 1;
+	// if last line isn't empty count it as well
+	if (*(pos - 1) != '\n' && pos > text) ++linec;
 
-	do
+	// creating output buffer with space for null termination
+	char **out = (char**)malloc((linec + 1) * sizeof(char*));
+
+	// creating first token
+	out[0] = strtok(text, "\n");
+
+	// filling in output buffer
+	for (size_t i = 1; i < linec; ++i)
 	{
-		cur = hzl_file_read_line(stream);
-		buf[bufc++] = cur;
-		printf("cur: %s\n", cur);
-		// buf is full or line is empty, store buffer
-		if (bufc >= 32 || !cur)
-		{
-			// allocate more memory (previous line count + lines in stack - 1(if line was invalid))
-			char **tmp = malloc((linec + bufc - !cur) * sizeof(char*));
-			printf("Allocating %zu lines\n", linec + bufc - !cur);
-			// null terminate buffer
-			tmp[linec + bufc - 1] = NULL;
-			// if there is data in output buffer
-			if (lines)
-			{	
-				// copy it
-				memcpy(tmp, lines, (linec - 1) * sizeof(char*));
-				// free old buffer
-				free(lines);
-			}
-			// point to new buffer
-			lines = tmp;
-			// copy stack into output buffer
-			memcpy(lines + linec - 1, buf, bufc * sizeof(char*));
-			// increase output buffer by size of stack
-			linec += bufc;
-			// rebase iterator
-			bufc = 0;
-			puts("End");
-		}
+		out[i] = strtok(NULL, "\n");
 	}
-	while(cur);
+	// null terminating output
+	out[linec] = NULL;
 
-	puts("Done with loop");
-
-	printf("Pos: %ld\n", ftell(stream));
-	printf("EOF: %d\n", feof(stream));
-	// closing file
-	if (fclose(stream))
-	{
-		fputs("File failed to close!", stderr);
-	}
-
-	puts("File closed");
-
-	// return buffer
-	return lines;
+	return out;
 }
 
-char *hzl_file_read_line(FILE *stream)
+char *hxfile_read_line(FILE *stream)
 {
 	if (!stream) return NULL;
 	// checking if eof
 	char c = getc(stream);
 	// returning null on fail
-	if (c == EOF)
-	{
-		if (c == EOF) puts("Read line EOF!!!");
-		// fclose(stream);
-		// puts("Closed file");
-		return NULL;
-	}
+	if (c == EOF) return NULL;
 	// putting char back in stream
 	ungetc(c, stream);
 	// temporary buffer
@@ -183,12 +159,9 @@ char *hzl_file_read_line(FILE *stream)
 	return line;
 }
 
-void hzl_file_free_lines(char **lines)
+void hxfile_free_lines(char **lines)
 {
-	for (char **pos = lines; *pos != NULL; ++pos)
-	{
-		free(*pos);
-	}
+	free(lines[0]);
 	free(lines);
 }
 
