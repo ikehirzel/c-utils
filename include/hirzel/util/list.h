@@ -11,13 +11,20 @@
 #define STR(s) LSTR(s)
 
 // Type agnostic macros
-#define HXL_STRUCT_NAME(type) CONCAT(struct hxlist_, type)
+#define HXL_BASE_NAME(type) 	CONCAT(hxlist_, type)
+#define HXL_STRUCT_NAME(base)	struct base
+#define HXL_TYPEDEF_NAME(base)	CONCAT(base, _t)
 
-#define HXL_STRUCT HXL_STRUCT_NAME(HIRZEL_UTIL_LIST_T)
-#define HXL_TYPE HIRZEL_UTIL_LIST_T
+// Convenient macro aliases
+#define HXL_BASE				HXL_BASE_NAME(HIRZEL_UTIL_LIST_T)
+#define HXL_TYPE				HIRZEL_UTIL_LIST_T
+#define HXL_STRUCT				HXL_STRUCT_NAME(HXL_BASE)
+#define HXL_TYPEDEF				HXL_TYPEDEF_NAME(HXL_BASE)
 
-#define HXL_FUNC(ret_type, func_name, ...)\
-ret_type CONCAT(HXL_SNAME, func_name)(__VA_ARGS__)
+#define HXL_FUNC_NAME(base, postfix) CONCAT(base, postfix)
+#define HXL_FUNC(name) HXL_FUNC_NAME(HXL_BASE, _##name)
+#define HXL_FUNC_DEC(ret_type, func_name, ...)\
+ret_type HXL_FUNC(func_name)(__VA_ARGS__)
 
 
 // Declarations
@@ -29,13 +36,18 @@ ret_type CONCAT(HXL_SNAME, func_name)(__VA_ARGS__)
 #include <string.h>
 #include <stdbool.h>
 
-HXL_STRUCT
+typedef HXL_STRUCT
 {
 	size_t len; 
 	HXL_TYPE *data;
-};
+} HXL_TYPEDEF;
 
-HXL_FUNC(HXL_STRUCT*, create,)
+
+/**
+ * @brief	Allocates instance of list
+ * @return	pointer to list
+ */
+HXL_FUNC_DEC(HXL_STRUCT*, create,)
 {
 	HXL_STRUCT *out = (HXL_STRUCT*)malloc(sizeof(HXL_STRUCT));
 	if (!out) return NULL;
@@ -49,7 +61,17 @@ HXL_FUNC(HXL_STRUCT*, create,)
 	return out;
 }
 
-HXL_FUNC(bool, push, HXL_STRUCT* list, HXL_TYPE item)
+/**
+ * @brief	Frees memory used by list instance
+ */
+HXL_FUNC_DEC(void, destroy, HXL_STRUCT *list)
+{
+	free(list->data);
+	free(list);
+}
+
+
+HXL_FUNC_DEC(bool, push, HXL_STRUCT* list, HXL_TYPE item)
 {
 	size_t size = list->len * sizeof(HXL_TYPE);
 	HXL_TYPE *tmp = (HXL_TYPE*)realloc(list->data, size + sizeof(HXL_TYPE));
@@ -59,8 +81,6 @@ HXL_FUNC(bool, push, HXL_STRUCT* list, HXL_TYPE item)
 	list->len += 1;
 	return true;
 }
-
-
 
 #endif // HIRZEL_UITL_LIST_H
 
