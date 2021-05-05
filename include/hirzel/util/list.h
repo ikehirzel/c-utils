@@ -21,10 +21,10 @@
 #define HXL_STRUCT				HXL_STRUCT_NAME(HXL_BASE)
 #define HXL_TYPEDEF				HXL_TYPEDEF_NAME(HXL_BASE)
 
-#define HXL_FUNC_NAME(base, postfix) CONCAT(base, postfix)
-#define HXL_FUNC(name) HXL_FUNC_NAME(HXL_BASE, _##name)
-#define HXL_FUNC_DEC(ret_type, func_name, ...)\
-ret_type HXL_FUNC(func_name)(__VA_ARGS__)
+#define HXL_FUNC_BASE(base, postfix) CONCAT(base, postfix)
+#define HXL_FUNC_NAME(name) HXL_FUNC_BASE(HXL_BASE, _##name)
+#define HXL_FUNC_SIG(ret_type, func_name, ...)\
+ret_type HXL_FUNC_NAME(func_name)(__VA_ARGS__)
 
 
 // Declarations
@@ -42,45 +42,22 @@ typedef HXL_STRUCT
 	HXL_TYPE *data;
 } HXL_TYPEDEF;
 
-
 /**
  * @brief	Allocates instance of list
  * @return	pointer to list
  */
-HXL_FUNC_DEC(HXL_STRUCT*, create,)
-{
-	HXL_STRUCT *out = (HXL_STRUCT*)malloc(sizeof(HXL_STRUCT));
-	if (!out) return NULL;
-	out->data = (HXL_TYPE*)malloc(1);
-	if (!out->data)
-	{
-		free(out);
-		return NULL;
-	}
-	out->len = 0;
-	return out;
-}
+extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
 
 /**
  * @brief	Frees memory used by list instance
  */
-HXL_FUNC_DEC(void, destroy, HXL_STRUCT *list)
-{
-	free(list->data);
-	free(list);
-}
+extern HXL_FUNC_SIG(void, destroy, HXL_STRUCT *list);
 
+/**
+ * @brief	Pushes item to end of list
+ */
+extern HXL_FUNC_SIG(bool, push, HXL_STRUCT* list, HXL_TYPE item);
 
-HXL_FUNC_DEC(bool, push, HXL_STRUCT* list, HXL_TYPE item)
-{
-	size_t size = list->len * sizeof(HXL_TYPE);
-	HXL_TYPE *tmp = (HXL_TYPE*)realloc(list->data, size + sizeof(HXL_TYPE));
-	if (!tmp) return false;
-	list->data = tmp;
-	list->data[list->len] = item;
-	list->len += 1;
-	return true;
-}
 
 #endif // HIRZEL_UITL_LIST_H
 
@@ -88,4 +65,59 @@ HXL_FUNC_DEC(bool, push, HXL_STRUCT* list, HXL_TYPE item)
 #ifdef HIRZEL_UTIL_LIST_I
 #undef HIRZEL_UTIL_LIST_I
 
+HXL_FUNC_SIG(HXL_STRUCT*, create,)
+{
+	// allocate buffer
+	HXL_STRUCT *out = (HXL_STRUCT*)malloc(sizeof(HXL_STRUCT));
+	// check for failure
+	if (!out) return NULL;
+	// preinitialize array so it can be resized/ destroy won't fail
+	out->data = (HXL_TYPE*)malloc(1);
+	// check for failure
+	if (!out->data)
+	{
+		free(out);
+		return NULL;
+	}
+	// initialize as empty
+	out->len = 0;
+
+	return out;
+}
+
+
+HXL_FUNC_SIG(void, destroy, HXL_STRUCT *list)
+{
+	// free array
+	free(list->data);
+	// free struct
+	free(list);
+}
+
+
+HXL_FUNC_SIG(bool, push, HXL_STRUCT* list, HXL_TYPE item)
+{
+	// calculate current isze of bufer in bytes
+	size_t size = list->len * sizeof(HXL_TYPE);
+	// allocate size + 1
+	HXL_TYPE *tmp = (HXL_TYPE*)realloc(list->data, size + sizeof(HXL_TYPE));
+	// check for failure
+	if (!tmp) return false;
+	// repoint buffer
+	list->data = tmp;
+	// put new item at end
+	list->data[list->len] = item;
+	// increment size
+	list->len += 1;
+	// success
+	return true;
+}
+
 #endif // HIRZEL_UTIL_LIST_I
+
+// Preprocessor cleanup
+#undef HXL_STRUCT
+#undef HXL_TYPEDEF
+#undef HXL_TYPE
+#undef HXL_BASE
+#undef HIRZEL_UTIL_LIST_T
