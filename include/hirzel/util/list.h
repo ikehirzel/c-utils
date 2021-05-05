@@ -1,17 +1,25 @@
 #define HIRZEL_UTIL_LIST_T int
 
-// skip everything if no type declared
-#ifdef HIRZEL_UTIL_LIST_T
+// Error if no type declared
+#ifndef HIRZEL_UTIL_LIST_T
+#error An element type must be defined for container
+#endif
 
-#define CONCAT(a, b) a ## b
-#define MAKE_STRUCT_NAME(type) CONCAT(hxlist_, type)
-#define MAKE_TYPE_NAME(name) CONCAT(name, _t)
-// defining names
+// Util macros
+#define CONCAT(a, b) a##b
+#define LSTR(s) #s
+#define STR(s) LSTR(s)
 
-#define HXLIST_TYPE HIRZEL_UTIL_LIST_T
-#define HXLIST_SNAME MAKE_STRUCT_NAME(HIRZEL_UTIL_LIST_T)
-#define HXLIST_TNAME MAKE_TYPE_NAME(HXLIST_STRUCT)
-#define HXLIST_FUNC(postfix) hxlist_ ## HXLIST_TYPE ## postfix
+// Type agnostic macros
+#define HXL_STRUCT_NAME(type) CONCAT(struct hxlist_, type)
+
+#define HXL_STRUCT HXL_STRUCT_NAME(HIRZEL_UTIL_LIST_T)
+#define HXL_TYPE HIRZEL_UTIL_LIST_T
+
+#define HXL_FUNC(ret_type, func_name, ...)\
+ret_type CONCAT(HXL_SNAME, func_name)(__VA_ARGS__)
+
+
 // Declarations
 #ifndef HIRZEL_UTIL_LIST_H
 #define HIRZEL_UITL_LIST_H
@@ -21,50 +29,38 @@
 #include <string.h>
 #include <stdbool.h>
 
-typedef struct hxlist
+HXL_STRUCT
 {
-	unsigned short esize;
-	void *data;
-	size_t length;
-} hxlist_t;
+	size_t len; 
+	HXL_TYPE *data;
+};
 
-typedef struct HXLIST_SNAME
+HXL_FUNC(HXL_STRUCT*, create,)
 {
-	HXLIST_TYPE *data;
-	size_t len;
-}
-HXLIST_TNAME;
-
-HXLIST_TNAME *HXLIST_FUNC(_create)()
-{
-	return NULL;
-}
-
-hxlist_t *_hxlist_create(unsigned short esize)
-{
-	hxlist_t *out = (hxlist_t*)malloc(sizeof(hxlist_t));
+	HXL_STRUCT *out = (HXL_STRUCT*)malloc(sizeof(HXL_STRUCT));
 	if (!out) return NULL;
-	out->data = malloc(1);
+	out->data = (HXL_TYPE*)malloc(1);
 	if (!out->data)
 	{
 		free(out);
 		return NULL;
 	}
-	out->esize = esize;
-	out->length = 0;
+	out->len = 0;
 	return out;
 }
 
-bool _hxlist_push(hxlist_t *list, const char* item)
+HXL_FUNC(bool, push, HXL_STRUCT* list, HXL_TYPE item)
 {
-	size_t size = list->length * list->esize;
-	void *tmp = realloc(list->data, size + list->esize);
+	size_t size = list->len * sizeof(HXL_TYPE);
+	HXL_TYPE *tmp = (HXL_TYPE*)realloc(list->data, size + sizeof(HXL_TYPE));
 	if (!tmp) return false;
-	memcpy((char*)tmp + size, item, list->esize);
-	list->length += 1;
 	list->data = tmp;
+	list->data[list->len] = item;
+	list->len += 1;
 	return true;
 }
+
+
 
 #endif // HIRZEL_UITL_LIST_H
 
@@ -73,5 +69,3 @@ bool _hxlist_push(hxlist_t *list, const char* item)
 #undef HIRZEL_UTIL_LIST_I
 
 #endif // HIRZEL_UTIL_LIST_I
-
-#endif // HIRZEL_UTIL_LIST_T
