@@ -59,14 +59,28 @@ extern HXL_FUNC_SIG(void, destroy, HXL_STRUCT *list);
 extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
 
 /**
- * @brief	Gets item at a given index with bound checking
+ * @brief	Gets item at a given index.
+ * 
+ * This function is bounds-checked and will return the desired element if i
+ * is in bounds, but an uninitialized instance if it is not. 
+ * 
+ * @param	list	hxlist instance
+ * @param	i		index of element
+ * 
  * @return	Copy of item
  */
 extern HXL_FUNC_SIG(HXL_TYPE, get, HXL_STRUCT *list, size_t i);
 
 /**
- * @brief	Gets reference to item at given index with bound checking
- * @return	Reference to item
+ * @brief	Gets reference to item at given index.
+ * 
+ * This function is bounds-checked and will return a valid reference if i is
+ * in bounds, but NULL if it is not.
+ * 
+ * @param	list	hxlist instance
+ * @param	i		index of element
+ * 
+ * @return	Reference to item or NULL
  */
 extern HXL_FUNC_SIG(HXL_TYPE*, getr, HXL_STRUCT *list, size_t i);
 
@@ -74,7 +88,10 @@ extern HXL_FUNC_SIG(HXL_TYPE*, getr, HXL_STRUCT *list, size_t i);
  * @brief	Gets item at given position.
  * 
  * This function is implemented as a macro for efficiency, but is
- * not bounds checked.
+ * not bounds-checked.
+ * 
+ * @param	list	hxlist instance
+ * @param	i		index of element
  * 
  * @return	Copy of item
  */
@@ -84,7 +101,10 @@ extern HXL_FUNC_SIG(HXL_TYPE*, getr, HXL_STRUCT *list, size_t i);
  * @brief	Gets pointer to item at given position.
  * 
  * This function is implemented as a macro for efficiency, but is
- * not bounds checked.
+ * not bounds-checked.
+ * 
+ * @param	list	hxlist (of any type) instance
+ * @param	i		index of element
  * 
  * @return	Refence to item
  */
@@ -94,7 +114,11 @@ extern HXL_FUNC_SIG(HXL_TYPE*, getr, HXL_STRUCT *list, size_t i);
  * @brief	Sets item at given position.
  * 
  * This function is implemented as a macro for efficiency, but is
- * not bound checked
+ * not bounds-checked
+ * 
+ * @param	list	hxlist (of any type) instance
+ * @param	i		index of element
+ * @param	val		new value to assign
  */
 #define hxlist_set(list, i, val) list->data[i] = val
 
