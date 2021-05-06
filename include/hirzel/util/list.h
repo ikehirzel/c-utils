@@ -56,7 +56,47 @@ extern HXL_FUNC_SIG(void, destroy, HXL_STRUCT *list);
 /**
  * @brief	Pushes item to end of list
  */
-extern HXL_FUNC_SIG(bool, push, HXL_STRUCT* list, HXL_TYPE item);
+extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
+
+/**
+ * @brief	Gets item at a given index with bound checking
+ * @return	Copy of item
+ */
+extern HXL_FUNC_SIG(HXL_TYPE, get, HXL_STRUCT *list, size_t i);
+
+/**
+ * @brief	Gets reference to item at given index with bound checking
+ * @return	Reference to item
+ */
+extern HXL_FUNC_SIG(HXL_TYPE*, getr, HXL_STRUCT *list, size_t i);
+
+/**
+ * @brief	Gets item at given position.
+ * 
+ * This function is implemented as a macro for efficiency, but is
+ * not bounds checked.
+ * 
+ * @return	Copy of item
+ */
+#define hxlist_get(list, i) (list->data[i])
+
+/**
+ * @brief	Gets pointer to item at given position.
+ * 
+ * This function is implemented as a macro for efficiency, but is
+ * not bounds checked.
+ * 
+ * @return	Refence to item
+ */
+#define hxlist_getr(list, i) (list->data + i)
+
+/**
+ * @brief	Sets item at given position.
+ * 
+ * This function is implemented as a macro for efficiency, but is
+ * not bound checked
+ */
+#define hxlist_set(list, i, val) list->data[i] = val
 
 
 #endif // HIRZEL_UITL_LIST_H
