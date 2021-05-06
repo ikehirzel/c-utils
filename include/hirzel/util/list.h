@@ -55,7 +55,7 @@ extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
  * 
  * @param	list	hxlist pointer
  */
-#define hxlist_destroy(list) { free(list->data); free(list); list = NULL; }
+#define hxlist_destroy(list) { free(list->data); free(list); }
 
 /**
  * @brief	Pushes item to end of list.
@@ -98,8 +98,8 @@ extern HXL_FUNC_SIG(bool, putr, HXL_STRUCT *list, size_t i, HXL_TYPE *ref);
 
 extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
 
-extern HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list, HXL_TYPE item);
-extern HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, HXL_TYPE item, size_t pos);
+extern HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list);
+extern HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, size_t pos, HXL_TYPE item);
 extern HXL_FUNC_SIG(bool, pushf, HXL_STRUCT *list, HXL_TYPE item);
 extern HXL_FUNC_SIG(bool, erase, HXL_STRUCT *list, size_t pos);
 extern HXL_FUNC_SIG(bool, popf, HXL_STRUCT *list);
@@ -155,6 +155,7 @@ extern HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b);
 #define hxlist_front(list) (list->data[0])
 #define hxlist_back(list) (list->data[list->len - 1])
 #define hxlist_is_empty(list) (list->len == 0)
+#define hxlist_size(list) (list->len)
 #define hxlist_clear(list) { list->len = 0; free(list->data); list->data = NULL; }
 
 #endif // HIRZEL_UITL_LIST_H
@@ -198,7 +199,7 @@ HXL_FUNC_SIG(bool, push, HXL_STRUCT* list, HXL_TYPE item)
 }
 
 // POP
-HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list, HXL_TYPE item)
+HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list)
 {
 	if (list->len == 0) return false;
 	HXL_TYPE *tmp = realloc(list->data, (list->len - 1)	* sizeof(HXL_TYPE));
@@ -209,7 +210,7 @@ HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list, HXL_TYPE item)
 }
 
 // INSERT
-HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, HXL_TYPE item, size_t pos)
+HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, size_t pos, HXL_TYPE item)
 {
 	// bounds check
 	if (pos > list->len) return false;
@@ -295,16 +296,17 @@ HXL_FUNC_SIG(bool, popf, HXL_STRUCT *list)
 	// bounds checking
 	if (list->len == 0) return false;
 
-	HXL_TYPE *tmp = malloc((list->len - 1) * sizeof(HXL_TYPE));
-	if (!tmp) return false;
+	list->len -= 1;
 
 	// moving data forwards
-	for (size_t i = 0; i < (list->len - 1); ++i)
+	for (size_t i = 0; i < list->len; ++i)
 	{
-		tmp[i] = list->data[i + 1];
+		list->data[i] = list->data[i + 1];
 	}
 
-	free(list->data);
+	HXL_TYPE *tmp = realloc(list->data, list->len * sizeof(HXL_TYPE));
+	if (!tmp) return false;
+
 	list->data = tmp;
 
 	return true;
