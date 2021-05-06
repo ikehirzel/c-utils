@@ -1,5 +1,3 @@
-#define HIRZEL_UTIL_LIST_T int
-
 // Error if no type declared
 #ifndef HIRZEL_UTIL_LIST_T
 #error An element type must be defined for container
@@ -43,18 +41,29 @@ typedef HXL_STRUCT
 
 
 /**
- * @brief	Allocates instance of list
+ * @brief	Allocates instance of hxlist
+ * 
+ * The data is dynamically allocated and the list should be
+ * freed with hxlist_destory
+ * 
  * @return	pointer to list
  */
 extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
 
 /**
  * @brief	Frees memory used by list instance
+ * 
+ * @param	list	hxlist pointer
  */
-#define hxlist_destroy(list) free(list->data); free(list)
+#define hxlist_destroy(list) { free(list->data); free(list); list = NULL; }
 
 /**
- * @brief	Pushes item to end of list
+ * @brief	Pushes item to end of list.
+ * 
+ * @param	list	hxlist pointer
+ * @param	item	element to add to list
+ * 
+ * @return	true on success, false on failure
  */
 extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
 
@@ -69,7 +78,7 @@ extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
  * 
  * @return	Copy of item
  */
-#define hxlist_at(list, i) ((i < list->len) ? list->data[i] : 0)
+extern HXL_FUNC_SIG(HXL_TYPE, at, HXL_STRUCT *list, size_t i);
 
 /**
  * @brief	Gets reference to item at given index.
@@ -82,9 +91,21 @@ extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
  * 
  * @return	Reference to item or NULL
  */
-extern HXL_FUNC_SIG(HXL_TYPE*, getr, HXL_STRUCT *list, size_t i);
+extern HXL_FUNC_SIG(HXL_TYPE*, atr, HXL_STRUCT *list, size_t i);
 
-extern HXL_FUNC_SIG(HXL_TYPE*, set, HXL_STRUCT *list, size_t i);
+extern HXL_FUNC_SIG(bool, put, HXL_STRUCT *list, size_t i, HXL_TYPE val);
+extern HXL_FUNC_SIG(bool, putr, HXL_STRUCT *list, size_t i, HXL_TYPE *ref);
+
+extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
+
+extern HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list, HXL_TYPE item);
+extern HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, HXL_TYPE item, size_t pos);
+extern HXL_FUNC_SIG(bool, pushf, HXL_STRUCT *list, HXL_TYPE item);
+extern HXL_FUNC_SIG(bool, erase, HXL_STRUCT *list, size_t pos);
+extern HXL_FUNC_SIG(bool, popf, HXL_STRUCT *list);
+extern HXL_FUNC_SIG(bool, resize, HXL_STRUCT *list, size_t new_size);
+extern HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b);
+
 
 /**
  * @brief	Gets item at given position.
@@ -98,7 +119,6 @@ extern HXL_FUNC_SIG(HXL_TYPE*, set, HXL_STRUCT *list, size_t i);
  * @return	Copy of item
  */
 #define hxlist_get(list, i) (list->data[i])
-
 
 
 /**
@@ -124,9 +144,9 @@ extern HXL_FUNC_SIG(HXL_TYPE*, set, HXL_STRUCT *list, size_t i);
  * @param	i		index of element
  * @param	val		new value to assign
  */
-#define hxlist_set(list, i, val) list->data[i] = val
+#define hxlist_set(list, i, val) (list->data[i] = val)
 
-#define hxlist_set_c(list, i, val) if (i < list->len) list->data[i] = val
+#define hxlist_setr(list, i, ref) (list->data[i] = *ref)
 
 /*******************************
  * OTHER MACROS TO DOCUMENT
@@ -134,10 +154,8 @@ extern HXL_FUNC_SIG(HXL_TYPE*, set, HXL_STRUCT *list, size_t i);
 
 #define hxlist_front(list) (list->data[0])
 #define hxlist_back(list) (list->data[list->len - 1])
-#define hxlist_empty(list) (list->len == 0)
-
-
-
+#define hxlist_is_empty(list) (list->len == 0)
+#define hxlist_clear(list) { list->len = 0; free(list->data); list->data = NULL; }
 
 #endif // HIRZEL_UITL_LIST_H
 
@@ -190,17 +208,6 @@ HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list, HXL_TYPE item)
 	return true;
 }
 
-// CLEAR
-HXL_FUNC_SIG(void, clear, HXL_STRUCT *list)
-{
-	// reset length
-	list->len = 0;
-	// free data
-	free(list->data);
-	// attempt to reset buffer
-	list->data = NULL;
-}
-
 // INSERT
 HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, HXL_TYPE item, size_t pos)
 {
@@ -251,6 +258,10 @@ HXL_FUNC_SIG(bool, pushf, HXL_STRUCT *list, HXL_TYPE item)
 	{
 		tmp[i + 1] = list->data[i];
 	}
+
+	// freeing old buffer and repointing
+	free(list->data);
+	list->data = tmp;
 
 	list->len += 1;
 	return true;
@@ -325,12 +336,38 @@ HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b)
 	return true;
 }
 
-// Other functions to implement
-/*
-	pushf
-	popf
-*/
+// AT
+HXL_FUNC_SIG(HXL_TYPE, at, HXL_STRUCT *list, size_t i)
+{
+	if (i >= list->len)
+	{
+		HXL_TYPE t = {0};
+		return t;
+	}
+	return list->data[i];
+}
 
+// ATR
+HXL_FUNC_SIG(HXL_TYPE*, atr, HXL_STRUCT *list, size_t i)
+{
+	return (i >= list->len) ? NULL : (list->data + i);
+}
+
+// PUT
+HXL_FUNC_SIG(bool, put, HXL_STRUCT *list, size_t i, HXL_TYPE val)
+{
+	if (i >= list->len) return false;
+	list->data[i] = val;
+	return true;
+}
+
+// PUTR
+HXL_FUNC_SIG(bool, putr, HXL_STRUCT *list, size_t i, HXL_TYPE *ref)
+{
+	if (i >= list->len) return false;
+	list->data[i] = *ref;
+	return true;
+}
 
 #endif // HIRZEL_UTIL_LIST_I
 
