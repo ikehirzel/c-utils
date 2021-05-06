@@ -17,8 +17,9 @@ int main(void)
 	// testing list creation
 	hxlist_int_t *list = hxlist_int_create();
 	assert(list != NULL);
-	assert(list->data != NULL);
+	assert(list->data == NULL);
 	assert(list->len == 0);
+	assert(hxlist_empty(list));
 
 	// testing list pushing
 	hxlist_int_push(list, 3);
@@ -32,14 +33,24 @@ int main(void)
 	hxlist_int_push(list, 5);
 	assert(list->len == 3);
 	assert(hxlist_get(list, 2) == 5);
+	assert(hxlist_back(list) == 5);
 
 	// testing list setting
 	hxlist_set(list, 2, 7);
 	assert(hxlist_get(list, 2) == 7);
+	assert(hxlist_back(list) == 7);
 
-	printf("Data[2]: %d\n", hxlist_get(list, 2));
+	// testing list get
 
-	hxlist_int_destroy(list);
-	// IntList i;
+	printf("%zu\n", list->len);
+	
+	//_hxlist_push((char**)list, &i, sizeof(int));
+	hxlist_int_push(list, 3);
+	printf("Len: %zu\n", list->len);
+	printf("back: %d\n", hxlist_back(list));
+
+	// freeing data
+	hxlist_destroy(list);
+	
 	return 0;
 }
