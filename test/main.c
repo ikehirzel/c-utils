@@ -67,33 +67,76 @@ void test_list()
 	assert(hxlist_front(list) == 12);
 	assert(hxlist_back(list) == 3);
 	assert(hxlist_size(list) == 2);
-	
 
 	// freeing data
 	hxlist_destroy(list);
 }
 
+size_t find_next_prime(size_t prime)
+{
+	size_t num = prime * 2;
+
+find_prime:
+	// check if number is divisible by anything other than 1 and itself
+	for (size_t div = 2; div < num / 2; ++div)
+	{
+		// if it is, try again
+		if (num % div == 0)
+		{
+			num += 1;
+			goto find_prime;
+		}
+	}
+
+	// prime found
+	return num;
+}
+
+void print_primes()
+{
+	size_t val = HXT_INIT_SIZE;
+	printf("%zu", val);
+	int found = 0;
+	while (found < 15)
+	{
+		val = find_next_prime(val);
+		printf(", %zu", val);
+		found += 1;
+	}
+	putchar('\n');
+}
+
 void test_table()
 {
-	// testing creation
+	// CREATION
 	hxtbl_int_t *table = hxtbl_int_create();
 	assert(table != NULL);
 	assert(table->data != NULL);
 	assert(table->size == HXT_INIT_SIZE);
 	assert(table->count == 0);
 
-	// setting
-	assert(hxtbl_int_set(table, "this is a string", 2));
-	// getting
-	assert(hxtbl_int_get(table, "this is a string") == 2);
+	const char *keys[] = { "abc", "def", "hij", "klm", "nop", "qrs", "tuv" "wxy", "z" };
+	// SETTING
+	for (size_t i = 0; i < (sizeof(keys) / sizeof(const char*)); ++i)
+	{
+		assert(hxtbl_int_set(table, keys[i], i * 2));
+		assert(table->count == i + 1);
+	}
 
+	// GETTING
+	for (size_t i = 0; i < (sizeof(keys) / sizeof(const char*)); ++i)
+	{
+		printf("Testing get @ %zu\n", i);
+		assert(hxtbl_int_get(table, keys[i]) == i * 2);
+	}
 
+	// DESTRUCTION
 	hxtbl_int_destroy(table);
 }
 
 int main(void)
 {
 	test_table();
-
+	//print_primes();
 	return 0;
 }

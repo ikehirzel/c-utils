@@ -12,23 +12,22 @@
 
 // Type agnostic macros
 #define HXT_BASE_NAME(type) 	CONCAT(hxtbl_, type)
-#define HXT_ITEM_NAME(type)		CONCAT(hxtbl_item_, type)
+#define HXT_ITEM_NAME(base)		CONCAT(base, _item)
 #define HXT_STRUCT_NAME(base)	struct base
 #define HXT_TYPEDEF_NAME(base)	CONCAT(base, _t)
 
 // Convenient macro aliases
 #define HXT_TYPE				HIRZEL_UTIL_TABLE_T
 #define HXT_BASE				HXT_BASE_NAME(HXT_TYPE)
-#define HXT_ITEM_BASE			HXT_ITEM_NAME(HXT_TYPE)
+#define HXT_SIZES				CONCAT(HXT_BASE, _sizes)
+#define HXT_ITEM_BASE			HXT_ITEM_NAME(HXT_BASE)
 #define HXT_STRUCT				HXT_STRUCT_NAME(HXT_BASE)
 #define HXT_ITEM				HXT_STRUCT_NAME(HXT_ITEM_BASE)
 #define HXT_TYPEDEF				HXT_TYPEDEF_NAME(HXT_BASE)
 #define HXT_ITEM_TYPEDEF		HXT_TYPEDEF_NAME(HXT_ITEM_BASE)
 
 #define HXT_FUNC_BASE(base, postfix) CONCAT(base, postfix)
-#define HXT_FUNC_NAME(name) HXT_FUNC_BASE(HXT_BASE, _##name)
-#define HXT_FUNC_SIG(ret_type, func_name, ...)\
-ret_type HXT_FUNC_NAME(func_name)(__VA_ARGS__)
+#define HXT_FUNC(name) HXT_FUNC_BASE(HXT_BASE, _##name)
 
 // Declarations
 #ifndef HIRZEL_UTIL_TABLE_H
@@ -39,7 +38,9 @@ ret_type HXT_FUNC_NAME(func_name)(__VA_ARGS__)
 
 #define HXT_HASH_P		(97)
 #define HXT_HASH_M		(1000000009)
-#define HXT_INIT_SIZE	(10)
+#define HXT_INIT_SIZE	(11)	// prime number
+#define HXT_PRIME_SIZES {11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853,\
+ 25717, 51437, 102877, 205759, 411527, 823117, 1646237, 3292489 }
 
 typedef HXT_ITEM
 {
@@ -56,17 +57,42 @@ typedef HXT_STRUCT
 
 extern long long unsigned hxhash(const char *str);
 
-extern HXT_FUNC_SIG(HXT_STRUCT*, create,);
-extern HXT_FUNC_SIG(void, destroy, HXT_STRUCT* table);
-extern HXT_FUNC_SIG(bool, set, HXT_STRUCT *table, const char *key, HXT_TYPE value);
-extern HXT_FUNC_SIG(HXT_TYPE, get, HXT_STRUCT *table, const char *key);
+extern HXT_STRUCT *HXT_FUNC(create)();
+extern void HXT_FUNC(destroy)(HXT_STRUCT *table);
+extern bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value);
+extern HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key);
 
 #endif
 
 #ifdef HIRZEL_UTIL_TABLE_I
 #undef HIRZEL_UTIL_TABLE_I
 
-HXT_FUNC_SIG(HXT_STRUCT*, create,)
+static size_t HXT_SIZES[] = HXT_PRIME_SIZES;
+
+
+static HXT_ITEM HXT_FUNC(item_create)(const char *key, HXT_TYPE *value)
+{
+	HXT_ITEM item = {0};
+
+	size_t len = strlen(key);
+	item.key = malloc(len + 1);
+
+	if (key)
+	{
+		strcpy(item.key, key);
+		item.value = *value;
+	}
+
+	return item;
+}
+
+static void HXT_FUNC(item_destroy)(HXT_ITEM *item)
+{
+	free(item->key);
+}
+
+// CREATE
+HXT_STRUCT *HXT_FUNC(create)()
 {
 	HXT_STRUCT *table = malloc(sizeof(HXT_STRUCT));
 	if (!table) return NULL;
@@ -76,32 +102,92 @@ HXT_FUNC_SIG(HXT_STRUCT*, create,)
 		free(table);
 		return NULL;
 	}
-	table->size = HXT_INIT_SIZE;
+	table->size = HXT_SIZES[0];
 	table->count = 0;
 	return table;
 }
 
-HXT_FUNC_SIG(void, destroy, HXT_STRUCT* table)
+// DESTROY
+void HXT_FUNC(destroy)(HXT_STRUCT *table)
 {
 	free(table->data);
 	free(table);
 }
 
-// for now, doesn't handle collisions
-HXT_FUNC_SIG(bool, set, HXT_STRUCT *table, const char *key, HXT_TYPE value)
+// CURRENTLY USES LINEAR PROBING
+static void HXT_FUNC(insert)(HXT_STRUCT *table, HXT_ITEM* item)
 {
-	size_t pos = hxhash(key) % table->size;
-	printf("Pos: %zu\n", pos);
-	table->data[pos].value = value;
+	// getting starting pos
+	size_t pos = hxhash(item->key) % table->size;
+	// while space is occupied, increment
+	while (table->data[pos].key != NULL) pos += 1;
+	// copying in element
+	table->data[pos] = *item;
+}
+
+// SET
+bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value)
+{
+	HXT_ITEM item = HXT_FUNC(item_create)(key, &value);
+
+	// printf("size: %zu, count: %zu\n", table->size, table->count);
+	// resizing when table is about half way full
+	if ((table->size / (table->count + 1)) <= 1)
+	{
+		// getting new size of hash table
+		// this will never fail, but it will stop growing after the last item
+		// is reached but this will likeyly never happen
+		size_t new_size = table->size;
+		for (int i = 1; i < sizeof(HXT_SIZES) / sizeof(size_t); ++i)
+		{
+			if (HXT_SIZES[i] > table->size)
+			{
+				new_size = HXT_SIZES[i];
+				break;
+			}
+		}
+	
+		// temporary storage for old buffer
+		HXT_ITEM *tmp = table->data;
+		// allocating new buffer
+		table->data = (HXT_ITEM*)calloc(new_size, sizeof(HXT_ITEM));
+		// if data failed to allocate
+		if (!table->data)
+		{
+			// clean up and exit
+			table->data = tmp;
+			HXT_FUNC(item_destroy)(&item);
+			return false;
+		}
+
+		size_t old_size = table->size;
+		table->size = new_size;		
+
+		// copying over old data
+		for (size_t i = 0; i < old_size; ++i)
+		{
+			// skip to non-null items
+			if (!tmp[i].key) continue;
+			HXT_FUNC(insert)(table, tmp + i);
+		}
+
+		// freeing old data
+		free(tmp);
+	}
+
+	HXT_FUNC(insert)(table, &item);
+	table->count += 1;
 	return true;
 }
 
-HXT_FUNC_SIG(HXT_TYPE, get, HXT_STRUCT *table, const char *key)
+// GET
+HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key)
 {
 	size_t pos = hxhash(key) % table->size;
 	return table->data[pos].value;
 }
 
+// hashing function
 long long unsigned hxhash(const char *str)
 {
 	long long unsigned hash = 0;
