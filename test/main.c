@@ -115,7 +115,7 @@ void test_table()
 	assert(table->size == HXT_INIT_SIZE);
 	assert(table->count == 0);
 
-	const char *keys[] = { "abc", "def", "hij", "klm", "nop", "qrs", "tuv" "wxy", "z" };
+	const char *keys[] = { "abc", "def", "hij", "klm", "nop", "qrs", "tuv", "wxy", "z" };
 	// SETTING
 	for (size_t i = 0; i < (sizeof(keys) / sizeof(const char*)); ++i)
 	{

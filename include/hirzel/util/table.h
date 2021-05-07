@@ -110,6 +110,12 @@ HXT_STRUCT *HXT_FUNC(create)()
 // DESTROY
 void HXT_FUNC(destroy)(HXT_STRUCT *table)
 {
+	for (size_t i = 0; i < table->size; ++i)
+	{
+		if (!table->data[i].key) continue;
+		HXT_FUNC(item_destroy(table->data + i));
+	}
+
 	free(table->data);
 	free(table);
 }
