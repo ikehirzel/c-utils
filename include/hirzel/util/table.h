@@ -61,6 +61,8 @@ extern HXT_STRUCT *HXT_FUNC(create)();
 extern void HXT_FUNC(destroy)(HXT_STRUCT *table);
 extern bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value);
 extern HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key);
+extern HXT_TYPE *HXT_FUNC(getr)(HXT_STRUCT *table, const char *key);
+extern bool HXT_FUNC(contains)(HXT_STRUCT *table, const char *key);
 
 #endif
 
@@ -96,7 +98,7 @@ HXT_STRUCT *HXT_FUNC(create)()
 {
 	HXT_STRUCT *table = malloc(sizeof(HXT_STRUCT));
 	if (!table) return NULL;
-	table->data = malloc(HXT_INIT_SIZE * sizeof(HXT_ITEM));
+	table->data = calloc(HXT_INIT_SIZE, sizeof(HXT_ITEM));
 	if (!table->data)
 	{
 		free(table);
@@ -143,7 +145,6 @@ bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value)
 {
 	HXT_ITEM item = HXT_FUNC(item_create)(key, &value);
 
-	// printf("size: %zu, count: %zu\n", table->size, table->count);
 	// resizing when table is about half way full
 	if ((table->size / (table->count + 1)) <= 1)
 	{
@@ -153,7 +154,7 @@ bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value)
 		size_t new_size = table->size;
 		for (int i = 1; i < sizeof(HXT_SIZES) / sizeof(size_t); ++i)
 		{
-			if (HXT_SIZES[i] > table->size)
+			if (HXT_SIZES[i] > new_size)
 			{
 				new_size = HXT_SIZES[i];
 				break;
@@ -193,11 +194,10 @@ bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value)
 	return true;
 }
 
-// GET
-HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key)
+HXT_TYPE *HXT_FUNC(getr)(HXT_STRUCT *table, const char *key)
 {
 	// initialized to 0 in case key is never found
-	HXT_TYPE t = {0};
+	HXT_TYPE *t = NULL;
 
 	// starting position for search
 	size_t pos = hxhash(key) % table->size;
@@ -205,12 +205,12 @@ HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key)
 	size_t offs = 0;
 	size_t i = pos;
 
-	do
+	while (table->data[i].key)
 	{
 		// if key matches
 		if (strcmp(key, table->data[i].key) == 0)
 		{
-			t = table->data[i].value;
+			t = &table->data[i].value;
 			break;
 		}
 
@@ -219,10 +219,22 @@ HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key)
 		// getting next position
 		i = (pos + offs * offs) % table->size;
 	}
-	// if bucket is empty, value doesn't exist
-	while (table->data[i].key);
 
 	return t;
+}
+
+// GET
+HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key)
+{
+	// initialized to 0 in case key is never found
+	HXT_TYPE t = {0};
+	HXT_TYPE *ref = HXT_FUNC(getr)(table, key);
+	return (ref) ? *ref : t;
+}
+
+bool HXT_FUNC(contains)(HXT_STRUCT *table, const char *key)
+{
+	return (HXT_FUNC(getr)(table, key)) ? true : false;
 }
 
 // hashing function
