@@ -69,7 +69,7 @@ void test_list()
 	assert(hxlist_size(list) == 2);
 
 	// freeing data
-	hxlist_destroy(list);
+	hxlist_int_destroy(list);
 }
 
 size_t find_next_prime(size_t prime)

@@ -20,9 +20,7 @@
 #define HXL_TYPEDEF				HXL_TYPEDEF_NAME(HXL_BASE)
 
 #define HXL_FUNC_BASE(base, postfix) CONCAT(base, postfix)
-#define HXL_FUNC_NAME(name) HXL_FUNC_BASE(HXL_BASE, _##name)
-#define HXL_FUNC_SIG(ret_type, func_name, ...)\
-ret_type HXL_FUNC_NAME(func_name)(__VA_ARGS__)
+#define HXL_FUNC(name) HXL_FUNC_BASE(HXL_BASE, _##name)
 
 // Declarations
 #ifndef HIRZEL_UTIL_LIST_H
@@ -48,14 +46,14 @@ typedef HXL_STRUCT
  * 
  * @return	pointer to list
  */
-extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
+extern HXL_STRUCT *HXL_FUNC(create)();
 
 /**
  * @brief	Frees memory used by list instance
  * 
  * @param	list	hxlist pointer
  */
-#define hxlist_destroy(list) { free(list->data); free(list); }
+extern void HXL_FUNC(destroy)(HXL_STRUCT *list);
 
 /**
  * @brief	Pushes item to end of list.
@@ -65,7 +63,7 @@ extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
  * 
  * @return	true on success, false on failure
  */
-extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
+extern bool HXL_FUNC(push)(HXL_STRUCT *list, HXL_TYPE item);
 
 /**
  * @brief	Gets item at a given index.
@@ -78,7 +76,7 @@ extern HXL_FUNC_SIG(bool, push, HXL_STRUCT *list, HXL_TYPE item);
  * 
  * @return	Copy of item
  */
-extern HXL_FUNC_SIG(HXL_TYPE, at, HXL_STRUCT *list, size_t i);
+extern HXL_TYPE HXL_FUNC(at)(HXL_STRUCT *list, size_t i);
 
 /**
  * @brief	Gets reference to item at given index.
@@ -91,21 +89,17 @@ extern HXL_FUNC_SIG(HXL_TYPE, at, HXL_STRUCT *list, size_t i);
  * 
  * @return	Reference to item or NULL
  */
-extern HXL_FUNC_SIG(HXL_TYPE*, atr, HXL_STRUCT *list, size_t i);
 
-extern HXL_FUNC_SIG(bool, put, HXL_STRUCT *list, size_t i, HXL_TYPE val);
-extern HXL_FUNC_SIG(bool, putr, HXL_STRUCT *list, size_t i, HXL_TYPE *ref);
-
-extern HXL_FUNC_SIG(HXL_STRUCT*, create,);
-
-extern HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list);
-extern HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, size_t pos, HXL_TYPE item);
-extern HXL_FUNC_SIG(bool, pushf, HXL_STRUCT *list, HXL_TYPE item);
-extern HXL_FUNC_SIG(bool, erase, HXL_STRUCT *list, size_t pos);
-extern HXL_FUNC_SIG(bool, popf, HXL_STRUCT *list);
-extern HXL_FUNC_SIG(bool, resize, HXL_STRUCT *list, size_t new_size);
-extern HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b);
-
+extern bool HXL_FUNC(pop)(HXL_STRUCT* list);
+extern bool HXL_FUNC(insert)(HXL_STRUCT *list, size_t pos, HXL_TYPE item);
+extern bool HXL_FUNC(pushf)(HXL_STRUCT *list, HXL_TYPE item);
+extern bool HXL_FUNC(erase)(HXL_STRUCT *list, size_t pos);
+extern bool HXL_FUNC(popf)(HXL_STRUCT *list);
+extern bool HXL_FUNC(resize)(HXL_STRUCT *list, size_t new_size);
+extern bool HXL_FUNC(swap)(HXL_STRUCT *list, size_t a, size_t b);
+extern HXL_TYPE *HXL_FUNC(atr)(HXL_STRUCT *list, size_t i);
+extern bool HXL_FUNC(put)(HXL_STRUCT *list, size_t i, HXL_TYPE val);
+extern bool HXL_FUNC(putr)(HXL_STRUCT *list, size_t i, HXL_TYPE *ref);
 
 /**
  * @brief	Gets item at given position.
@@ -165,7 +159,7 @@ extern HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b);
 #undef HIRZEL_UTIL_LIST_I
 
 // CREATE
-HXL_FUNC_SIG(HXL_STRUCT*, create,)
+HXL_STRUCT *HXL_FUNC(create)()
 {
 	// allocate buffer
 	HXL_STRUCT *out = (HXL_STRUCT*)malloc(sizeof(HXL_STRUCT));
@@ -179,8 +173,15 @@ HXL_FUNC_SIG(HXL_STRUCT*, create,)
 	return out;
 }
 
+// DESTROY
+void HXL_FUNC(destroy)(HXL_STRUCT *list)
+{
+	free(list->data);
+	free(list);
+}
+
 // PUSH
-HXL_FUNC_SIG(bool, push, HXL_STRUCT* list, HXL_TYPE item)
+bool HXL_FUNC(push)(HXL_STRUCT *list, HXL_TYPE item)
 {
 	// calculate current isze of buffer in bytes
 	size_t size = list->len * sizeof(HXL_TYPE);
@@ -199,7 +200,7 @@ HXL_FUNC_SIG(bool, push, HXL_STRUCT* list, HXL_TYPE item)
 }
 
 // POP
-HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list)
+bool HXL_FUNC(pop)(HXL_STRUCT* list)
 {
 	if (list->len == 0) return false;
 	HXL_TYPE *tmp = realloc(list->data, (list->len - 1)	* sizeof(HXL_TYPE));
@@ -210,7 +211,7 @@ HXL_FUNC_SIG(bool, pop, HXL_STRUCT* list)
 }
 
 // INSERT
-HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, size_t pos, HXL_TYPE item)
+bool HXL_FUNC(insert)(HXL_STRUCT *list, size_t pos, HXL_TYPE item)
 {
 	// bounds check
 	if (pos > list->len) return false;
@@ -247,7 +248,7 @@ HXL_FUNC_SIG(bool, insert, HXL_STRUCT *list, size_t pos, HXL_TYPE item)
 }
 
 // PUSHF
-HXL_FUNC_SIG(bool, pushf, HXL_STRUCT *list, HXL_TYPE item)
+bool HXL_FUNC(pushf)(HXL_STRUCT *list, HXL_TYPE item)
 {
 	// allocating new buffer
 	HXL_TYPE *tmp = (HXL_TYPE*)malloc((list->len + 1) * sizeof(HXL_STRUCT));
@@ -269,7 +270,7 @@ HXL_FUNC_SIG(bool, pushf, HXL_STRUCT *list, HXL_TYPE item)
 }
 
 // ERASE
-HXL_FUNC_SIG(bool, erase, HXL_STRUCT *list, size_t pos)
+bool HXL_FUNC(erase)(HXL_STRUCT *list, size_t pos)
 {
 	// bounds check
 	if (pos > list->len) return false;
@@ -291,7 +292,7 @@ HXL_FUNC_SIG(bool, erase, HXL_STRUCT *list, size_t pos)
 }
 
 // POPF
-HXL_FUNC_SIG(bool, popf, HXL_STRUCT *list)
+bool HXL_FUNC(popf)(HXL_STRUCT *list)
 {
 	// bounds checking
 	if (list->len == 0) return false;
@@ -314,7 +315,7 @@ HXL_FUNC_SIG(bool, popf, HXL_STRUCT *list)
 }
 
 // RESIZE
-HXL_FUNC_SIG(bool, resize, HXL_STRUCT *list, size_t new_size)
+bool HXL_FUNC(resize)(HXL_STRUCT *list, size_t new_size)
 {
 	HXL_TYPE *tmp = realloc(list->data, new_size * sizeof(HXL_TYPE));
 	if (!tmp) return false;
@@ -324,7 +325,7 @@ HXL_FUNC_SIG(bool, resize, HXL_STRUCT *list, size_t new_size)
 }
 
 // SWAP
-HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b)
+bool HXL_FUNC(swap)(HXL_STRUCT *list, size_t a, size_t b)
 {
 	// bounds checking
 	if (a >= list->len || b >= list->len) return false;
@@ -339,7 +340,7 @@ HXL_FUNC_SIG(bool, swap, HXL_STRUCT *list, size_t a, size_t b)
 }
 
 // AT
-HXL_FUNC_SIG(HXL_TYPE, at, HXL_STRUCT *list, size_t i)
+HXL_TYPE HXL_FUNC(at)(HXL_STRUCT *list, size_t i)
 {
 	if (i >= list->len)
 	{
@@ -350,13 +351,13 @@ HXL_FUNC_SIG(HXL_TYPE, at, HXL_STRUCT *list, size_t i)
 }
 
 // ATR
-HXL_FUNC_SIG(HXL_TYPE*, atr, HXL_STRUCT *list, size_t i)
+HXL_TYPE *HXL_FUNC(atr)(HXL_STRUCT *list, size_t i)
 {
 	return (i >= list->len) ? NULL : (list->data + i);
 }
 
 // PUT
-HXL_FUNC_SIG(bool, put, HXL_STRUCT *list, size_t i, HXL_TYPE val)
+bool HXL_FUNC(put)(HXL_STRUCT *list, size_t i, HXL_TYPE val)
 {
 	if (i >= list->len) return false;
 	list->data[i] = val;
@@ -364,7 +365,7 @@ HXL_FUNC_SIG(bool, put, HXL_STRUCT *list, size_t i, HXL_TYPE val)
 }
 
 // PUTR
-HXL_FUNC_SIG(bool, putr, HXL_STRUCT *list, size_t i, HXL_TYPE *ref)
+bool HXL_FUNC(putr)(HXL_STRUCT *list, size_t i, HXL_TYPE *ref)
 {
 	if (i >= list->len) return false;
 	list->data[i] = *ref;
