@@ -126,9 +126,16 @@ static void HXT_FUNC(insert)(HXT_STRUCT *table, HXT_ITEM* item)
 	// getting starting pos
 	size_t pos = hxhash(item->key) % table->size;
 	// while space is occupied, increment
-	while (table->data[pos].key != NULL) pos += 1;
+	size_t offs = 0;
+	size_t i = pos;
+
+	while (table->data[i].key != NULL)
+	{
+		offs += 1;
+		i = (pos + offs * offs) % table->size;
+	}
 	// copying in element
-	table->data[pos] = *item;
+	table->data[i] = *item;
 }
 
 // SET
@@ -189,8 +196,33 @@ bool HXT_FUNC(set)(HXT_STRUCT *table, const char* key, HXT_TYPE value)
 // GET
 HXT_TYPE HXT_FUNC(get)(HXT_STRUCT *table, const char *key)
 {
+	// initialized to 0 in case key is never found
+	HXT_TYPE t = {0};
+
+	// starting position for search
 	size_t pos = hxhash(key) % table->size;
-	return table->data[pos].value;
+	
+	size_t offs = 0;
+	size_t i = pos;
+
+	do
+	{
+		// if key matches
+		if (strcmp(key, table->data[i].key) == 0)
+		{
+			t = table->data[i].value;
+			break;
+		}
+
+		// quadratic probing
+		offs += 1;
+		// getting next position
+		i = (pos + offs * offs) % table->size;
+	}
+	// if bucket is empty, value doesn't exist
+	while (table->data[i].key);
+
+	return t;
 }
 
 // hashing function

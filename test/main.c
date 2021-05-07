@@ -72,40 +72,6 @@ void test_list()
 	hxlist_int_destroy(list);
 }
 
-size_t find_next_prime(size_t prime)
-{
-	size_t num = prime * 2;
-
-find_prime:
-	// check if number is divisible by anything other than 1 and itself
-	for (size_t div = 2; div < num / 2; ++div)
-	{
-		// if it is, try again
-		if (num % div == 0)
-		{
-			num += 1;
-			goto find_prime;
-		}
-	}
-
-	// prime found
-	return num;
-}
-
-void print_primes()
-{
-	size_t val = HXT_INIT_SIZE;
-	printf("%zu", val);
-	int found = 0;
-	while (found < 15)
-	{
-		val = find_next_prime(val);
-		printf(", %zu", val);
-		found += 1;
-	}
-	putchar('\n');
-}
-
 void test_table()
 {
 	// CREATION
@@ -115,7 +81,11 @@ void test_table()
 	assert(table->size == HXT_INIT_SIZE);
 	assert(table->count == 0);
 
-	const char *keys[] = { "abc", "def", "hij", "klm", "nop", "qrs", "tuv", "wxy", "z" };
+	const char *keys[] =
+	{
+		"a", "b", "c", "d", "e", "f", "h", "i", "j", "k", "l", "m", "n",
+		"o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+	};
 	// SETTING
 	for (size_t i = 0; i < (sizeof(keys) / sizeof(const char*)); ++i)
 	{
