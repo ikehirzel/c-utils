@@ -75,10 +75,25 @@ void test_list()
 
 void test_table()
 {
-	printf("hash: %llu\n", hxhash("ike"));
+	// testing creation
+	hxtbl_int_t *table = hxtbl_int_create();
+	assert(table != NULL);
+	assert(table->data != NULL);
+	assert(table->size == HXT_INIT_SIZE);
+	assert(table->count == 0);
+
+	// setting
+	assert(hxtbl_int_set(table, "this is a string", 2));
+	// getting
+	assert(hxtbl_int_get(table, "this is a string") == 2);
+
+
+	hxtbl_int_destroy(table);
 }
 
 int main(void)
 {
+	test_table();
+
 	return 0;
 }
