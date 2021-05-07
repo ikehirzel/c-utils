@@ -1,17 +1,17 @@
-#define HIRZEL_UTIL_LIST_T int
-#include <hirzel/util/list.h>
-
-// preprocessor assertations
-#if defined(HXL_STRUCT) || defined(HXL_TYPEDEF) || defined(HXL_TYPE)\
-|| defined(HXL_BASE) || defined(HIRZEL_UTIL_LIST_T) || defined(HIRZEL_UTIL_LIST_I)
-#error Utility macros need to have their definitions removed
-#endif
-
 #include <stdio.h>
 #include <assert.h>
-#include <string.h>
 
-int main(void)
+#define HIRZEL_UTIL_LIST_T int
+#include <hirzel/util/list.h>
+#define HIRZEL_UTIL_LIST_T int
+#include <hirzel/util/table.h>
+#include <hirzel/util/file.h>
+
+void test_file()
+{
+}
+
+void test_list()
 {
 	// testing list creation
 	hxlist_int_t *list = hxlist_int_create();
@@ -54,7 +54,7 @@ int main(void)
 	assert(hxlist_size(list) == 4);
 
 	// popping
-	
+
 	assert(hxlist_int_pop(list));
 	// 9 12 3
 	assert(hxlist_back(list) == 3);
@@ -67,10 +67,18 @@ int main(void)
 	assert(hxlist_front(list) == 12);
 	assert(hxlist_back(list) == 3);
 	assert(hxlist_size(list) == 2);
-
+	
 
 	// freeing data
 	hxlist_destroy(list);
-	
+}
+
+void test_table()
+{
+	printf("hash: %llu\n", hxhash("ike"));
+}
+
+int main(void)
+{
 	return 0;
 }
