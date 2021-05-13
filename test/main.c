@@ -21,55 +21,54 @@ void test_list()
 	assert(list != NULL);
 	assert(list->data == NULL);
 	assert(list->len == 0);
-	assert(hxlist_is_empty(list));
+	assert(int_list_is_empty(list));
 
 	// pushing
 	assert(int_list_push(list, 3));
 	// 3
-	assert(hxlist_size(list) == 1);
-	assert(hxlist_get(list, 0) == 3);
-	assert(hxlist_back(list) == 3);
-	assert(hxlist_front(list) == 3);
-	assert(!hxlist_is_empty(list));
+	assert(list->len == 1);
+	assert(int_list_get(list, 0) == 3);
+	assert(int_list_back(list) == 3);
+	assert(int_list_front(list) == 3);
+	assert(!int_list_is_empty(list));
 
 	assert(int_list_push(list, 4));
 	// 3 4
-	assert(hxlist_size(list) == 2);
-	assert(hxlist_get(list, 1) == 4);
-	assert(hxlist_back(list) == 4);
-	assert(hxlist_front(list) == 3);
-	assert(!hxlist_is_empty(list));
+	assert(list->len == 2);
+	assert(int_list_get(list, 1) == 4);
+	assert(int_list_back(list) == 4);
+	assert(int_list_front(list) == 3);
+	assert(!int_list_is_empty(list));
 
 	assert(int_list_pushf(list, 9));
 	// 9 3 4
-	assert(hxlist_size(list) == 3);
-	assert(hxlist_front(list) == 9);
-	assert(hxlist_back(list) == 4);
+	assert(list->len == 3);
+	assert(int_list_front(list) == 9);
+	assert(int_list_back(list) == 4);
 
 	// inserting
 
 	assert(int_list_insert(list, 1, 12));
 	// 9 12 3 4
-	assert(hxlist_front(list) == 9);
-	assert(hxlist_get(list, 1) == 12);
-	assert(hxlist_get(list, 2) == 3);
-	assert(hxlist_back(list) == 4);
-	assert(hxlist_size(list) == 4);
+	assert(int_list_front(list) == 9);
+	assert(int_list_get(list, 1) == 12);
+	assert(int_list_get(list, 2) == 3);
+	assert(int_list_back(list) == 4);
+	assert(list->len == 4);
 
 	// popping
 
 	assert(int_list_pop(list));
 	// 9 12 3
-	assert(hxlist_back(list) == 3);
-	assert(hxlist_size(list) == 3);
-	assert(hxlist_size(list) == 3);
-	assert(hxlist_front(list) == 9);
+	assert(int_list_back(list) == 3);
+	assert(list->len == 3);
+	assert(int_list_front(list) == 9);
 
 	assert(int_list_popf(list));
 	// 12 3
-	assert(hxlist_front(list) == 12);
-	assert(hxlist_back(list) == 3);
-	assert(hxlist_size(list) == 2);
+	assert(int_list_front(list) == 12);
+	assert(int_list_back(list) == 3);
+	assert(list->len == 2);
 
 	// freeing data
 	int_list_destroy(list);

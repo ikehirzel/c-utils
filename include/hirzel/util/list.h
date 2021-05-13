@@ -1,8 +1,8 @@
-#define HIRZEL_UTIL_LIST_ELEM int
+#define HIRZEL_UTIL_LIST_ITEM int
 #define HIRZEL_UTIL_LIST_NAME	int_list
 
 // Error if no type declared
-#ifndef HIRZEL_UTIL_LIST_ELEM
+#ifndef HIRZEL_UTIL_LIST_ITEM
 #error An element type must be defined for list
 #endif
 
@@ -21,7 +21,7 @@
 
 #define HXSTRUCT 	HXSTRUCT_NAME(HIRZEL_UTIL_LIST_NAME)
 #define HXTYPEDEF 	HXTYPEDEF_NAME(HIRZEL_UTIL_LIST_NAME)
-#define HXELEM		HIRZEL_UTIL_LIST_ELEM
+#define HXITEM		HIRZEL_UTIL_LIST_ITEM
 
 #define HXFUNC_BASE(base, postfix) CONCAT(base, postfix)
 #define HXFUNC(name) HXFUNC_BASE(HIRZEL_UTIL_LIST_NAME, _##name)
@@ -34,7 +34,7 @@
 typedef HXSTRUCT
 {
 	size_t len; 
-	HXELEM *data;
+	HXITEM *data;
 } HXTYPEDEF;
 
 
@@ -63,7 +63,7 @@ extern void HXFUNC(destroy)(HXSTRUCT *list);
  * 
  * @return	true on success, false on failure
  */
-extern bool HXFUNC(push)(HXSTRUCT *list, HXELEM item);
+extern bool HXFUNC(push)(HXSTRUCT *list, HXITEM item);
 
 /**
  * @brief	Gets item at a given index.
@@ -76,7 +76,7 @@ extern bool HXFUNC(push)(HXSTRUCT *list, HXELEM item);
  * 
  * @return	Copy of item
  */
-extern HXELEM HXFUNC(at)(HXSTRUCT *list, size_t i);
+extern HXITEM HXFUNC(at)(HXSTRUCT *list, size_t i);
 
 /**
  * @brief	Gets reference to item at given index.
@@ -91,15 +91,20 @@ extern HXELEM HXFUNC(at)(HXSTRUCT *list, size_t i);
  */
 
 extern bool HXFUNC(pop)(HXSTRUCT* list);
-extern bool HXFUNC(insert)(HXSTRUCT *list, size_t pos, HXELEM item);
-extern bool HXFUNC(pushf)(HXSTRUCT *list, HXELEM item);
+extern bool HXFUNC(insert)(HXSTRUCT *list, size_t pos, HXITEM item);
+extern bool HXFUNC(pushf)(HXSTRUCT *list, HXITEM item);
 extern bool HXFUNC(erase)(HXSTRUCT *list, size_t pos);
 extern bool HXFUNC(popf)(HXSTRUCT *list);
 extern bool HXFUNC(resize)(HXSTRUCT *list, size_t new_size);
 extern bool HXFUNC(swap)(HXSTRUCT *list, size_t a, size_t b);
-extern HXELEM *HXFUNC(atr)(HXSTRUCT *list, size_t i);
-extern bool HXFUNC(put)(HXSTRUCT *list, size_t i, HXELEM val);
-extern bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXELEM *ref);
+extern HXITEM *HXFUNC(atr)(HXSTRUCT *list, size_t i);
+extern bool HXFUNC(put)(HXSTRUCT *list, size_t i, HXITEM item);
+extern bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXITEM *ref);
+extern void HXFUNC(setr)(HXSTRUCT *list, size_t i, HXITEM *ref);
+extern HXITEM HXFUNC(front)(HXSTRUCT *list);
+extern HXITEM HXFUNC(back)(HXSTRUCT *list);
+extern bool HXFUNC(is_empty)(HXSTRUCT *list);
+extern void HXFUNC(clear)(HXSTRUCT *list);
 
 /**
  * @brief	Gets item at given position.
@@ -112,7 +117,7 @@ extern bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXELEM *ref);
  * 
  * @return	Copy of item
  */
-#define hxlist_get(list, i) (list->data[i])
+extern HXITEM HXFUNC(get)(HXSTRUCT *list, size_t i);
 
 
 /**
@@ -126,7 +131,7 @@ extern bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXELEM *ref);
  * 
  * @return	Refence to item
  */
-#define hxlist_getr(list, i) (list->data + i)
+extern HXITEM *HXFUNC(getr)(HXSTRUCT *list, size_t i);
 
 /**
  * @brief	Sets item at given position.
@@ -138,21 +143,9 @@ extern bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXELEM *ref);
  * @param	i		index of element
  * @param	val		new value to assign
  */
-#define hxlist_set(list, i, val) (list->data[i] = val)
+extern void HXFUNC(set)(HXSTRUCT *list, size_t i, HXITEM item);
 
-#define hxlist_setr(list, i, ref) (list->data[i] = *ref)
 
-/*******************************
- * OTHER MACROS TO DOCUMENT
- ******************************/
-
-#define hxlist_front(list) (list->data[0])
-#define hxlist_back(list) (list->data[list->len - 1])
-#define hxlist_is_empty(list) (list->len == 0)
-#define hxlist_size(list) (list->len)
-#define hxlist_clear(list) { list->len = 0; free(list->data); list->data = NULL; }
-
-// Definitions
 #ifdef HIRZEL_UTIL_LIST_IMPL
 #undef HIRZEL_UTIL_LIST_IMPL
 
@@ -179,12 +172,12 @@ void HXFUNC(destroy)(HXSTRUCT *list)
 }
 
 // PUSH
-bool HXFUNC(push)(HXSTRUCT *list, HXELEM item)
+bool HXFUNC(push)(HXSTRUCT *list, HXITEM item)
 {
 	// calculate current isze of buffer in bytes
-	size_t size = list->len * sizeof(HXELEM);
+	size_t size = list->len * sizeof(HXITEM);
 	// allocate size + 1
-	HXELEM *tmp = (HXELEM*)realloc(list->data, size + sizeof(HXELEM));
+	HXITEM *tmp = (HXITEM*)realloc(list->data, size + sizeof(HXITEM));
 	// check for failure
 	if (!tmp) return false;
 	// repoint buffer
@@ -201,7 +194,7 @@ bool HXFUNC(push)(HXSTRUCT *list, HXELEM item)
 bool HXFUNC(pop)(HXSTRUCT* list)
 {
 	if (list->len == 0) return false;
-	HXELEM *tmp = realloc(list->data, (list->len - 1)	* sizeof(HXELEM));
+	HXITEM *tmp = realloc(list->data, (list->len - 1)	* sizeof(HXITEM));
 	if (!tmp) return false;
 	list->data = tmp;
 	list->len -= 1;
@@ -209,13 +202,13 @@ bool HXFUNC(pop)(HXSTRUCT* list)
 }
 
 // INSERT
-bool HXFUNC(insert)(HXSTRUCT *list, size_t pos, HXELEM item)
+bool HXFUNC(insert)(HXSTRUCT *list, size_t pos, HXITEM item)
 {
 	// bounds check
 	if (pos > list->len) return false;
 
 	// allocate new buffer
-	HXELEM *tmp = (HXELEM*)malloc((list->len + 1) * sizeof(HXSTRUCT));
+	HXITEM *tmp = (HXITEM*)malloc((list->len + 1) * sizeof(HXSTRUCT));
 	if (!tmp) return false;
 
 	// copy over data before new pos
@@ -246,10 +239,10 @@ bool HXFUNC(insert)(HXSTRUCT *list, size_t pos, HXELEM item)
 }
 
 // PUSHF
-bool HXFUNC(pushf)(HXSTRUCT *list, HXELEM item)
+bool HXFUNC(pushf)(HXSTRUCT *list, HXITEM item)
 {
 	// allocating new buffer
-	HXELEM *tmp = (HXELEM*)malloc((list->len + 1) * sizeof(HXSTRUCT));
+	HXITEM *tmp = (HXITEM*)malloc((list->len + 1) * sizeof(HXSTRUCT));
 	if (!tmp) return false;
 
 	tmp[0] = item;
@@ -281,7 +274,7 @@ bool HXFUNC(erase)(HXSTRUCT *list, size_t pos)
 	}
 
 	// resizing buffer
-	HXELEM *tmp = realloc(list->data, (list->len - 1) * sizeof(HXELEM));
+	HXITEM *tmp = realloc(list->data, (list->len - 1) * sizeof(HXITEM));
 	if (!tmp) return false;
 	list->data = tmp;
 	list->len -= 1;
@@ -303,7 +296,7 @@ bool HXFUNC(popf)(HXSTRUCT *list)
 		list->data[i] = list->data[i + 1];
 	}
 
-	HXELEM *tmp = realloc(list->data, list->len * sizeof(HXELEM));
+	HXITEM *tmp = realloc(list->data, list->len * sizeof(HXITEM));
 	if (!tmp) return false;
 
 	list->data = tmp;
@@ -315,7 +308,7 @@ bool HXFUNC(popf)(HXSTRUCT *list)
 // RESIZE
 bool HXFUNC(resize)(HXSTRUCT *list, size_t new_size)
 {
-	HXELEM *tmp = realloc(list->data, new_size * sizeof(HXELEM));
+	HXITEM *tmp = realloc(list->data, new_size * sizeof(HXITEM));
 	if (!tmp) return false;
 	list->data = tmp;
 	list->len = new_size;
@@ -329,7 +322,7 @@ bool HXFUNC(swap)(HXSTRUCT *list, size_t a, size_t b)
 	if (a >= list->len || b >= list->len) return false;
 
 	// swapping elements
-	HXELEM t;
+	HXITEM t;
 	t = list->data[a];
 	list->data[a] = list->data[b];
 	list->data[b] = t;
@@ -337,25 +330,54 @@ bool HXFUNC(swap)(HXSTRUCT *list, size_t a, size_t b)
 	return true;
 }
 
+/*
+HXFUNC()(HXSTRUCT *list)
+{
+}
+*/
+
+// GET
+HXITEM HXFUNC(get)(HXSTRUCT *list, size_t i)
+{
+	return list->data[i];
+}
+
+// GETR
+HXITEM *HXFUNC(getr)(HXSTRUCT *list, size_t i)
+{
+	return list->data + i;
+}
+
 // AT
-HXELEM HXFUNC(at)(HXSTRUCT *list, size_t i)
+HXITEM HXFUNC(at)(HXSTRUCT *list, size_t i)
 {
 	if (i >= list->len)
 	{
-		HXELEM t = {0};
+		HXITEM t = {0};
 		return t;
 	}
 	return list->data[i];
 }
 
 // ATR
-HXELEM *HXFUNC(atr)(HXSTRUCT *list, size_t i)
+HXITEM *HXFUNC(atr)(HXSTRUCT *list, size_t i)
 {
 	return (i >= list->len) ? NULL : (list->data + i);
 }
 
+// SET
+void HXFUNC(set)(HXSTRUCT *list, size_t i, HXITEM item)
+{ref
+}
+
+// SETR
+void HXFUNC(setr)(HXSTRUCT *list, size_t i, HXITEM *ref)
+{
+	list->data[i] = *ref;
+}
+
 // PUT
-bool HXFUNC(put)(HXSTRUCT *list, size_t i, HXELEM val)
+bool HXFUNC(put)(HXSTRUCT *list, size_t i, HXITEM val)
 {
 	if (i >= list->len) return false;
 	list->data[i] = val;
@@ -363,19 +385,45 @@ bool HXFUNC(put)(HXSTRUCT *list, size_t i, HXELEM val)
 }
 
 // PUTR
-bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXELEM *ref)
+bool HXFUNC(putr)(HXSTRUCT *list, size_t i, HXITEM *ref)
 {
 	if (i >= list->len) return false;
 	list->data[i] = *ref;
 	return true;
 }
 
+// BACK
+HXITEM HXFUNC(back)(HXSTRUCT *list)
+{
+	return list->data[list->len - 1];
+}
+
+// FRONT
+HXITEM HXFUNC(front)(HXSTRUCT *list)
+{
+	return *(list->data);
+}
+
+// IS EMPTY
+bool HXFUNC(is_empty)(HXSTRUCT *list)
+{
+	return list->len > 0;
+}
+
+// CLEAR
+void HXFUNC(clear)(HXSTRUCT *list)
+{
+	list->len = 0;
+	free(list->data);
+	list->data = NULL;
+}
+
+
 #endif // HIRZEL_UTIL_LIST_IMPL
 
 // Preprocessor cleanup
 #undef HXSTRUCT
-#undef HXELEMDEF
-#undef HXELEM
-#undef HXL_BASE
-#undef HXL_NULL
-#undef HIRZEL_UTIL_LIST_T
+#undef HXTYPEDEF
+#undef HXITEM
+#undef HIRZEL_UTIL_LIST_ITEM
+#undef HIRZEL_UTIL_LIST_NAME
