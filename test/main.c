@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define HIRZEL_UTIL_LIST_T int
-#include <hirzel/util/list.h>
-#define HIRZEL_UTIL_LIST_T int
+#include "intlist.h"
+
+#include "type.h"
+
+#define HIRZEL_UTIL_TABLE_T int
 #include <hirzel/util/table.h>
+
 #include <hirzel/util/file.h>
 
 void test_file()
@@ -14,14 +17,14 @@ void test_file()
 void test_list()
 {
 	// testing list creation
-	hxlist_int_t *list = hxlist_int_create();
+	int_list_t *list = int_list_create();
 	assert(list != NULL);
 	assert(list->data == NULL);
 	assert(list->len == 0);
 	assert(hxlist_is_empty(list));
 
 	// pushing
-	assert(hxlist_int_push(list, 3));
+	assert(int_list_push(list, 3));
 	// 3
 	assert(hxlist_size(list) == 1);
 	assert(hxlist_get(list, 0) == 3);
@@ -29,7 +32,7 @@ void test_list()
 	assert(hxlist_front(list) == 3);
 	assert(!hxlist_is_empty(list));
 
-	assert(hxlist_int_push(list, 4));
+	assert(int_list_push(list, 4));
 	// 3 4
 	assert(hxlist_size(list) == 2);
 	assert(hxlist_get(list, 1) == 4);
@@ -37,7 +40,7 @@ void test_list()
 	assert(hxlist_front(list) == 3);
 	assert(!hxlist_is_empty(list));
 
-	assert(hxlist_int_pushf(list, 9));
+	assert(int_list_pushf(list, 9));
 	// 9 3 4
 	assert(hxlist_size(list) == 3);
 	assert(hxlist_front(list) == 9);
@@ -45,7 +48,7 @@ void test_list()
 
 	// inserting
 
-	assert(hxlist_int_insert(list, 1, 12));
+	assert(int_list_insert(list, 1, 12));
 	// 9 12 3 4
 	assert(hxlist_front(list) == 9);
 	assert(hxlist_get(list, 1) == 12);
@@ -55,21 +58,21 @@ void test_list()
 
 	// popping
 
-	assert(hxlist_int_pop(list));
+	assert(int_list_pop(list));
 	// 9 12 3
 	assert(hxlist_back(list) == 3);
 	assert(hxlist_size(list) == 3);
 	assert(hxlist_size(list) == 3);
 	assert(hxlist_front(list) == 9);
 
-	assert(hxlist_int_popf(list));
+	assert(int_list_popf(list));
 	// 12 3
 	assert(hxlist_front(list) == 12);
 	assert(hxlist_back(list) == 3);
 	assert(hxlist_size(list) == 2);
 
 	// freeing data
-	hxlist_int_destroy(list);
+	int_list_destroy(list);
 }
 
 void test_table()
