@@ -1,8 +1,8 @@
-#ifndef HIRZEL_UTIL_LIST_INT_H
-#define HIRZEL_UTIL_LIST_INT_H
+#ifndef INTLIST_H
+#define INTLIST_H
 
-#define HIRZEL_UTIL_LIST_ITEM int
-#define HIRZEL_UTIL_LIST_NAME int_list
+#define HIRZEL_CONTAINER_ITEM int
+#define HIRZEL_CONTAINER_NAME int_list
 #include <hirzel/util/list.h>
 
 #endif

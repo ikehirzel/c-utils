@@ -1,30 +1,24 @@
-#define HIRZEL_UTIL_LIST_ITEM int
-#define HIRZEL_UTIL_LIST_NAME	int_list
-
 // Error if no type declared
-#ifndef HIRZEL_UTIL_LIST_ITEM
+#ifndef HIRZEL_CONTAINER_ITEM
 #error An element type must be defined for list
 #endif
 
-#ifndef HIRZEL_UTIL_LIST_NAME
+#ifndef HIRZEL_CONTAINER_NAME
 #error A struct name must be defined for list
 #endif
 
-
 // Util macros
-#define CONCAT(a, b) a##b
-#define LSTR(s) #s
-#define STR(s) LSTR(s)
-
-#define HXTYPEDEF_NAME(base) CONCAT(base, _t)
+#define HXCONCAT(a, b) a##b
+#define HXTYPEDEF_NAME(base) HXCONCAT(base, _t)
 #define HXSTRUCT_NAME(base) struct base
+#define HXFUNC_NAME(base, postfix) HXCONCAT(base, postfix)
 
-#define HXSTRUCT 	HXSTRUCT_NAME(HIRZEL_UTIL_LIST_NAME)
-#define HXTYPEDEF 	HXTYPEDEF_NAME(HIRZEL_UTIL_LIST_NAME)
-#define HXITEM		HIRZEL_UTIL_LIST_ITEM
+// Conventent macro aliases 
+#define HXSTRUCT 	HXSTRUCT_NAME(HIRZEL_CONTAINER_NAME)
+#define HXTYPEDEF 	HXTYPEDEF_NAME(HIRZEL_CONTAINER_NAME)
+#define HXITEM		HIRZEL_CONTAINER_ITEM
+#define HXFUNC(name) HXFUNC_NAME(HIRZEL_CONTAINER_NAME, _##name)
 
-#define HXFUNC_BASE(base, postfix) CONCAT(base, postfix)
-#define HXFUNC(name) HXFUNC_BASE(HIRZEL_UTIL_LIST_NAME, _##name)
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -146,8 +140,8 @@ extern HXITEM *HXFUNC(getr)(HXSTRUCT *list, size_t i);
 extern void HXFUNC(set)(HXSTRUCT *list, size_t i, HXITEM item);
 
 
-#ifdef HIRZEL_UTIL_LIST_IMPL
-#undef HIRZEL_UTIL_LIST_IMPL
+#ifdef HIRZEL_IMPLEMENT
+#undef HIRZEL_IMPLEMENT
 
 // CREATE
 HXSTRUCT *HXFUNC(create)()
@@ -330,12 +324,6 @@ bool HXFUNC(swap)(HXSTRUCT *list, size_t a, size_t b)
 	return true;
 }
 
-/*
-HXFUNC()(HXSTRUCT *list)
-{
-}
-*/
-
 // GET
 HXITEM HXFUNC(get)(HXSTRUCT *list, size_t i)
 {
@@ -367,7 +355,8 @@ HXITEM *HXFUNC(atr)(HXSTRUCT *list, size_t i)
 
 // SET
 void HXFUNC(set)(HXSTRUCT *list, size_t i, HXITEM item)
-{ref
+{
+	list->data[i] = item;
 }
 
 // SETR
@@ -419,11 +408,16 @@ void HXFUNC(clear)(HXSTRUCT *list)
 }
 
 
-#endif // HIRZEL_UTIL_LIST_IMPL
+#endif // HIRZEL_IMPLEMENT
 
 // Preprocessor cleanup
+#undef HIRZEL_CONTAINER_ITEM
+#undef HIRZEL_CONTAINER_NAME
+#undef HXCONCAT
+#undef HXTYPEDEF_NAME
+#undef HXSTRUCT_NAME
+#undef HXFUNC_NAME
 #undef HXSTRUCT
 #undef HXTYPEDEF
 #undef HXITEM
-#undef HIRZEL_UTIL_LIST_ITEM
-#undef HIRZEL_UTIL_LIST_NAME
+#undef HXFUNC
