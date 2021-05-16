@@ -12,21 +12,24 @@ void test_file()
 
 void test_list()
 {
+	puts("Testing list");
 	// testing list creation
+	puts("\tcreation...");
 	int_list_t *list = int_list_create();
 	assert(list != NULL);
 	assert(list->data == NULL);
 	assert(list->len == 0);
-	assert(int_list_is_empty(list));
+	assert(int_list_empty(list));
 
 	// pushing
+	puts("\tpushing...");
 	assert(int_list_push(list, 3));
 	// 3
 	assert(list->len == 1);
 	assert(int_list_get(list, 0) == 3);
 	assert(int_list_back(list) == 3);
 	assert(int_list_front(list) == 3);
-	assert(!int_list_is_empty(list));
+	assert(!int_list_empty(list));
 
 	assert(int_list_push(list, 4));
 	// 3 4
@@ -34,7 +37,7 @@ void test_list()
 	assert(int_list_get(list, 1) == 4);
 	assert(int_list_back(list) == 4);
 	assert(int_list_front(list) == 3);
-	assert(!int_list_is_empty(list));
+	assert(!int_list_empty(list));
 
 	assert(int_list_pushf(list, 9));
 	// 9 3 4
@@ -53,7 +56,7 @@ void test_list()
 	assert(list->len == 4);
 
 	// popping
-
+	puts("\tpopping...");
 	assert(int_list_pop(list));
 	// 9 12 3
 	assert(int_list_back(list) == 3);
@@ -68,6 +71,7 @@ void test_list()
 
 	// freeing data
 	int_list_destroy(list);
+	puts("All tests passed\n");
 }
 
 void test_table()
@@ -216,7 +220,6 @@ void test_table()
 
 	// shrinking
 	assert(int_tbl_shrink(table));
-	printf("Table size index: %u\n", table->size_idx);
 
 	// DESTRUCTION
 	int_tbl_destroy(table);
@@ -225,6 +228,7 @@ void test_table()
 
 int main(void)
 {
+	test_list();
 	test_table();
 	return 0;
 }
