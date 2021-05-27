@@ -288,7 +288,12 @@ HXITEM HXSYM(get)(HXSTRUCT *table, const char *key)
 	// initialized to 0 in case key is never found
 	HXITEM t = {0};
 	HXNODE *node = HXSYM(getnode)(table, key, strlen(key));
-	return (node) ? node->value : t;bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len)
+	return (node) ? node->value : t;
+	
+}
+
+
+
 bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len)
 {
 	return (HXSYM(getnode)(table, key, len)) ? true : false;
