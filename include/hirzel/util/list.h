@@ -59,7 +59,7 @@ extern void HXSYM(destroy)(HXSTRUCT *list);
  */
 extern bool HXSYM(push)(HXSTRUCT *list, HXITEM item);
 
-extern bool HXSYM(push_ref)(HXSTRUCT *list, HXITEM *item);
+extern bool HXSYM(pushref)(HXSTRUCT *list, HXITEM *item);
 
 /**
  * @brief	Gets item at a given index.
@@ -93,10 +93,10 @@ extern bool HXSYM(erase)(HXSTRUCT *list, size_t pos);
 extern bool HXSYM(popf)(HXSTRUCT *list);
 extern bool HXSYM(resize)(HXSTRUCT *list, size_t new_size);
 extern bool HXSYM(swap)(HXSTRUCT *list, size_t a, size_t b);
-extern HXITEM *HXSYM(at_ref)(HXSTRUCT *list, size_t i);
+extern HXITEM *HXSYM(atref)(HXSTRUCT *list, size_t i);
 extern bool HXSYM(put)(HXSTRUCT *list, size_t i, HXITEM item);
-extern bool HXSYM(put_ref)(HXSTRUCT *list, size_t i, HXITEM *ref);
-extern void HXSYM(set_ref)(HXSTRUCT *list, size_t i, HXITEM *ref);
+extern bool HXSYM(putref)(HXSTRUCT *list, size_t i, HXITEM *ref);
+extern void HXSYM(setref)(HXSTRUCT *list, size_t i, HXITEM *ref);
 extern HXITEM HXSYM(front)(HXSTRUCT *list);
 extern HXITEM HXSYM(back)(HXSTRUCT *list);
 extern bool HXSYM(empty)(HXSTRUCT *list);
@@ -127,7 +127,7 @@ extern HXITEM HXSYM(get)(HXSTRUCT *list, size_t i);
  * 
  * @return	Refence to item
  */
-extern HXITEM *HXSYM(get_ref)(HXSTRUCT *list, size_t i);
+extern HXITEM *HXSYM(getref)(HXSTRUCT *list, size_t i);
 
 /**
  * @brief	Sets item at given position.
@@ -171,7 +171,7 @@ void HXSYM(destroy)(HXSTRUCT *list)
 
 
 // PUSH REF
-bool HXSYM(push_ref)(HXSTRUCT *list, HXITEM *item)
+bool HXSYM(pushref)(HXSTRUCT *list, HXITEM *item)
 {
 	// calculate current isze of buffer in bytes
 	size_t size = list->len * sizeof(HXITEM);
@@ -193,7 +193,7 @@ bool HXSYM(push_ref)(HXSTRUCT *list, HXITEM *item)
 // PUSH
 bool HXSYM(push)(HXSTRUCT *list, HXITEM item)
 {
-	return HXSYM(push_ref)(list, &item);
+	return HXSYM(pushref)(list, &item);
 }
 
 
@@ -352,7 +352,7 @@ HXITEM HXSYM(get)(HXSTRUCT *list, size_t i)
 
 
 // GETR
-HXITEM *HXSYM(get_ref)(HXSTRUCT *list, size_t i)
+HXITEM *HXSYM(getref)(HXSTRUCT *list, size_t i)
 {
 	return list->data + i;
 }
@@ -371,7 +371,7 @@ HXITEM HXSYM(at)(HXSTRUCT *list, size_t i)
 
 
 // ATR
-HXITEM *HXSYM(at_ref)(HXSTRUCT *list, size_t i)
+HXITEM *HXSYM(atref)(HXSTRUCT *list, size_t i)
 {
 	return (i >= list->len) ? NULL : (list->data + i);
 }
@@ -385,7 +385,7 @@ void HXSYM(set)(HXSTRUCT *list, size_t i, HXITEM item)
 
 
 // SETR
-void HXSYM(set_ref)(HXSTRUCT *list, size_t i, HXITEM *ref)
+void HXSYM(setref)(HXSTRUCT *list, size_t i, HXITEM *ref)
 {
 	list->data[i] = *ref;
 }
@@ -401,7 +401,7 @@ bool HXSYM(put)(HXSTRUCT *list, size_t i, HXITEM val)
 
 
 // PUTR
-bool HXSYM(put_ref)(HXSTRUCT *list, size_t i, HXITEM *ref)
+bool HXSYM(putref)(HXSTRUCT *list, size_t i, HXITEM *ref)
 {
 	if (i >= list->len) return false;
 	list->data[i] = *ref;

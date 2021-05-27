@@ -237,7 +237,7 @@ HXNODE *HXSYM(getnode)(HXSTRUCT *table, const char *key, size_t len)
 	while (table->data[i].key)
 	{
 		// if key matches
-		if (strcmp(key, table->data[i].key) == 0)
+		if (strncmp(key, table->data[i].key, len) == 0)
 		{
 			node = table->data + i;
 			break;
