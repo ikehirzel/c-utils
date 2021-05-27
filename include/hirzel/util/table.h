@@ -51,14 +51,19 @@ extern const size_t HXSYM(sizes)[];
 extern long long unsigned HXSYM(hash)(const char *str, size_t len);
 extern HXSTRUCT *HXSYM(create)();
 extern void HXSYM(destroy)(HXSTRUCT *table);
+// setters
 extern bool HXSYM(set)(HXSTRUCT *table, const char* key, HXITEM value);
 extern bool HXSYM(setn)(HXSTRUCT *table, const char* key, size_t len, HXITEM value);
 extern bool HXSYM(setref)(HXSTRUCT *table, const char* key, HXITEM *value);
 extern bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value);
+extern void HXSYM(setnode)(HXSTRUCT *table, HXNODE* node);
+
 extern HXITEM HXSYM(get)(HXSTRUCT *table, const char *key);
 extern HXITEM HXSYM(getn)(HXSTRUCT *table, const char *key, size_t len);
 extern HXITEM *HXSYM(getref)(HXSTRUCT *table, const char *key);
 extern HXITEM *HXSYM(getnref)(HXSTRUCT *table, const char *key, size_t len);
+extern HXNODE *HXSYM(getnode)(HXSTRUCT *table, const char *key, size_t len);
+
 extern bool HXSYM(contains)(HXSTRUCT *table, const char *key);
 extern bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len);
 extern bool HXSYM(empty)(HXSTRUCT *table);
@@ -82,11 +87,13 @@ static HXNODE HXSYM(node_create)(const char *key, size_t len, HXITEM *value)
 	HXNODE node = {0};
 	if (!key) return node;
 	node.key = malloc(len + 1);
-	strcpy(node.key, key);
+	strncpy(node.key, key, len);
+	node.key[len] = 0;
 	node.value = *value;
 
 	return node;
 }
+
 
 static void HXSYM(node_destroy)(HXNODE *node)
 {
@@ -111,6 +118,7 @@ HXSTRUCT *HXSYM(create)()
 	return table;
 }
 
+
 // DESTROY
 void HXSYM(destroy)(HXSTRUCT *table)
 {
@@ -122,6 +130,7 @@ void HXSYM(destroy)(HXSTRUCT *table)
 	}
 	free(table);
 }
+
 
 // INSERT
 void HXSYM(setnode)(HXSTRUCT *table, HXNODE* node)
@@ -144,6 +153,7 @@ void HXSYM(setnode)(HXSTRUCT *table, HXNODE* node)
 }
 
 
+// RESIZE
 bool HXSYM(resize)(HXSTRUCT *table, unsigned new_size_idx)
 {
 	// do nothing if new size is same as old
@@ -175,7 +185,6 @@ bool HXSYM(resize)(HXSTRUCT *table, unsigned new_size_idx)
 }
 
 
-
 // SETNREF
 bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value)
 {
@@ -188,9 +197,9 @@ bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value)
 		// getting new size of hash table
 		// this will never fail, but it will stop growing after the last item
 		// is reached but this will likeyly never happen
-		char new_idx = table->size_idx;
+		unsigned new_idx = table->size_idx;
 		// if there is room to grow
-		if (new_idx < (char)(sizeof(HXSYM(sizes)) / sizeof(size_t)) - 1)
+		if (new_idx < (sizeof(HXSYM(sizes)) / sizeof(size_t)) - 1)
 		{
 			new_idx += 1;
 		}
@@ -205,7 +214,7 @@ bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value)
 }
 
 
-// SET REF
+// SETREF
 bool HXSYM(setref)(HXSTRUCT *table, const char* key, HXITEM *value)
 {
 	return HXSYM(setnref)(table, key, strlen(key), value);

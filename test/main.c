@@ -160,6 +160,9 @@ void test_table()
 	{
 		assert(int_tbl_set(table, keys[i], (int)i * 2));
 		assert(table->count == i + 1);
+		struct int_tbl_node *node = int_tbl_getnode(table, keys[i], strlen(keys[i]));
+		assert(node != NULL);
+		assert(!strcmp(node->key, keys[i]));
 	}
 
 	assert(table->size_idx == table_size_idx);
@@ -222,6 +225,7 @@ void test_table()
 	assert(int_tbl_shrink(table));
 
 	// DESTRUCTION
+	int_tbl_destroy(int_tbl_create());
 	int_tbl_destroy(table);
 	puts("All tests passed\n");
 }
