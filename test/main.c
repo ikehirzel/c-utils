@@ -123,8 +123,8 @@ void test_table()
 	// testing keys that have been inserted
 	for (size_t i = 0; i < key_count; ++i)
 	{
-		assert(int_tbl_get(table, keys[i]) == i * 2);
-		assert(*int_tbl_get_ref(table, keys[i]) == i * 2);
+		assert(int_tbl_get(table, keys[i]) == (int)i * 2);
+		assert(*int_tbl_getref(table, keys[i]) == (int)i * 2);
 		assert(int_tbl_contains(table, keys[i]));
 	}
 	
@@ -133,7 +133,7 @@ void test_table()
 	for (size_t i = 0; i < non_key_count; ++i)
 	{
 		assert(int_tbl_get(table, non_keys[i]) == 0);
-		assert(int_tbl_get_ref(table, non_keys[i]) == NULL);
+		assert(int_tbl_getref(table, non_keys[i]) == NULL);
 		assert(!int_tbl_contains(table, non_keys[i]));
 	}
 	
@@ -146,7 +146,7 @@ void test_table()
 	for (size_t i = 0; i < key_count; ++i)
 	{
 		assert(int_tbl_get(table, keys[i]) == 0);
-		assert(int_tbl_get_ref(table, keys[i]) == NULL);
+		assert(int_tbl_getref(table, keys[i]) == NULL);
 		assert(!int_tbl_contains(table, keys[i]));
 	}
 
@@ -158,7 +158,7 @@ void test_table()
 	puts("\treinserting...");
 	for (size_t i = 0; i < key_count; ++i)
 	{
-		assert(int_tbl_set(table, keys[i], i * 2));
+		assert(int_tbl_set(table, keys[i], (int)i * 2));
 		assert(table->count == i + 1);
 	}
 
@@ -183,7 +183,7 @@ void test_table()
 	for (size_t i = 0; i < key_count; ++i)
 	{
 		assert(int_tbl_get(table, keys[i]) == 0);
-		assert(int_tbl_get_ref(table, keys[i]) == NULL);
+		assert(int_tbl_getref(table, keys[i]) == NULL);
 		assert(!int_tbl_contains(table, keys[i]));
 	}
 

@@ -48,14 +48,17 @@ typedef HXSTRUCT
 
 extern const size_t HXSYM(sizes)[];
 
-extern long long unsigned HXSYM(hash)(const char *str);
+extern long long unsigned HXSYM(hash)(const char *str, size_t len);
 extern HXSTRUCT *HXSYM(create)();
 extern void HXSYM(destroy)(HXSTRUCT *table);
 extern bool HXSYM(set)(HXSTRUCT *table, const char* key, HXITEM value);
-extern bool HXSYM(set_ref)(HXSTRUCT *table, const char* key, HXITEM *value);
+extern bool HXSYM(setn)(HXSTRUCT *table, const char* key, size_t len, HXITEM value);
+extern bool HXSYM(setref)(HXSTRUCT *table, const char* key, HXITEM *value);
+extern bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value);
 extern HXITEM HXSYM(get)(HXSTRUCT *table, const char *key);
-extern HXITEM *HXSYM(get_ref)(HXSTRUCT *table, const char *key);
-extern HXNODE *HXSYM(get_node)(HXSTRUCT *table, const char *key);
+extern HXITEM HXSYM(getn)(HXSTRUCT *table, const char *key, size_t len);
+extern HXITEM *HXSYM(getnref)(HXSTRUCT *table, const char *key, size_t len);
+extern HXITEM *HXSYM(getref)(HXSTRUCT *table, const char *key);
 extern bool HXSYM(contains)(HXSTRUCT *table, const char *key);
 extern bool HXSYM(empty)(HXSTRUCT *table);
 extern void HXSYM(clear)(HXSTRUCT *table);
@@ -70,11 +73,11 @@ extern bool HXSYM(resize)(HXSTRUCT *table, unsigned new_size_idx);
 
 const size_t HXSYM(sizes)[] = HXTABLE_SIZES;
 
-static HXNODE HXSYM(node_create)(const char *key, HXITEM *value)
+
+static HXNODE HXSYM(node_create)(const char *key, size_t len, HXITEM *value)
 {
 	HXNODE node = {0};
 	if (!key) return node;
-	size_t len = strlen(key);
 	node.key = malloc(len + 1);
 	strcpy(node.key, key);
 	node.value = *value;
@@ -86,6 +89,7 @@ static void HXSYM(node_destroy)(HXNODE *node)
 {
 	free(node->key);
 }
+
 
 // CREATE
 HXSTRUCT *HXSYM(create)()
@@ -113,17 +117,15 @@ void HXSYM(destroy)(HXSTRUCT *table)
 		if (!table->data[i].key) continue;
 		HXSYM(node_destroy(table->data + i));
 	}
-
-	free(table->data);
 	free(table);
 }
 
 // INSERT
-void HXSYM(set_node)(HXSTRUCT *table, HXNODE* node)
+void HXSYM(setnode)(HXSTRUCT *table, HXNODE* node)
 {
 	size_t size = HXSYM(sizes)[table->size_idx];
 	// getting starting pos
-	size_t pos = HXSYM(hash)(node->key) % size;
+	size_t pos = HXSYM(hash)(node->key, strlen(node->key)) % size;
 	
 	// while space is occupied, increment
 	size_t offs = 0;
@@ -137,6 +139,7 @@ void HXSYM(set_node)(HXSTRUCT *table, HXNODE* node)
 	// copying in node
 	table->data[i] = *node;
 }
+
 
 bool HXSYM(resize)(HXSTRUCT *table, unsigned new_size_idx)
 {
@@ -161,17 +164,20 @@ bool HXSYM(resize)(HXSTRUCT *table, unsigned new_size_idx)
 	// copying over old data
 	for (size_t i = 0; i < tmpc; ++i)
 	{
-		if (tmp[i].key) HXSYM(set_node)(table, tmp + i);
+		if (tmp[i].key) HXSYM(setnode)(table, tmp + i);
 	}
 
 	free(tmp);
 	return true;
 }
 
-bool HXSYM(set_ref)(HXSTRUCT *table, const char* key, HXITEM *value)
+
+
+// SETNREF
+bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value)
 {
-	if (!key) return false;
-	HXNODE node = HXSYM(node_create)(key, value);
+	if (!key || !len) return false;
+	HXNODE node = HXSYM(node_create)(key, len, value);
 	size_t size = HXSYM(sizes)[table->size_idx];
 	// resizing when table is about half way full
 	if ((size / (table->count + 1)) <= 1)
@@ -181,7 +187,7 @@ bool HXSYM(set_ref)(HXSTRUCT *table, const char* key, HXITEM *value)
 		// is reached but this will likeyly never happen
 		char new_idx = table->size_idx;
 		// if there is room to grow
-		if (new_idx < (sizeof(HXSYM(sizes)) / sizeof(size_t)) - 1)
+		if (new_idx < (char)(sizeof(HXSYM(sizes)) / sizeof(size_t)) - 1)
 		{
 			new_idx += 1;
 		}
@@ -190,23 +196,39 @@ bool HXSYM(set_ref)(HXSTRUCT *table, const char* key, HXITEM *value)
 		if (!res) return false;
 	}
 	
-	HXSYM(set_node)(table, &node);
+	HXSYM(setnode)(table, &node);
 	table->count += 1;
 	return true;
 }
 
+
+// SET REF
+bool HXSYM(setref)(HXSTRUCT *table, const char* key, HXITEM *value)
+{
+	return HXSYM(setnref)(table, key, strlen(key), value);
+}
+
+
+// SETN
+bool HXSYM(setn)(HXSTRUCT *table, const char *key, size_t len, HXITEM value)
+{
+	return HXSYM(setnref)(table, key, len, &value);
+}
+
+
 // SET
 bool HXSYM(set)(HXSTRUCT *table, const char* key, HXITEM value)
 {
-	return HXSYM(set_ref)(table, key, &value);
+	return HXSYM(setnref)(table, key, strlen(key), &value);
 }
 
-HXNODE *HXSYM(get_node)(HXSTRUCT *table, const char *key)
+
+HXNODE *HXSYM(getnode)(HXSTRUCT *table, const char *key, size_t len)
 {
 	HXNODE *node = NULL;
 	size_t size = HXSYM(sizes)[table->size_idx];
 	// starting position for search
-	size_t pos = HXSYM(hash)(key) % size;
+	size_t pos = HXSYM(hash)(key, len) % size;
 	
 	size_t offs = 0;
 	size_t i = pos;
@@ -230,55 +252,97 @@ HXNODE *HXSYM(get_node)(HXSTRUCT *table, const char *key)
 	return node;
 }
 
-HXITEM *HXSYM(get_ref)(HXSTRUCT *table, const char *key)
+
+
+// GET N REF
+HXITEM *HXSYM(getnref)(HXSTRUCT *table, const char *key, size_t len)
 {
-	HXNODE *node = HXSYM(get_node)(table, key);
+	HXNODE *node = HXSYM(getnode)(table, key, len);
 	return (node) ? &node->value : NULL;
 }
+
+
+// GET REF
+HXITEM *HXSYM(getref)(HXSTRUCT *table, const char *key)
+{
+	HXNODE *node = HXSYM(getnode)(table, key, strlen(key));
+	return (node) ? &node->value : NULL;
+}
+
+
+// GET N
+HXITEM HXSYM(getn)(HXSTRUCT *table, const char *key, size_t len)
+{
+	HXITEM item = {0};
+	HXNODE *node = HXSYM(getnode)(table, key, len);
+	return (node) ? node->value : item;
+}
+
 
 // GET
 HXITEM HXSYM(get)(HXSTRUCT *table, const char *key)
 {
 	// initialized to 0 in case key is never found
 	HXITEM t = {0};
-	HXNODE *node = HXSYM(get_node)(table, key);
+	HXNODE *node = HXSYM(getnode)(table, key, strlen(key));
 	return (node) ? node->value : t;
 }
 
-bool HXSYM(contains)(HXSTRUCT *table, const char *key)
+
+// CONTAINS N
+bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len)
 {
-	return (HXSYM(get_node)(table, key)) ? true : false;
+	return (HXSYM(getnode)(table, key, len)) ? true : false;
 }
 
-bool HXSYM(erase)(HXSTRUCT *table, const char *key)
+
+
+// CONTAINS
+bool HXSYM(contains)(HXSTRUCT *table, const char *key)
 {
-	HXNODE *node = HXSYM(get_node)(table, key);
+	return (HXSYM(getnode)(table, key, strlen(key))) ? true : false;
+}
+
+
+// ERASE N
+bool HXSYM(erasen)(HXSTRUCT *table, const char *key, size_t len)
+{
+	HXNODE *node = HXSYM(getnode)(table, key, len);
 	if (!node) return false;
 	node->key = NULL;
 	table->count -= 1;
 	return true;
 }
 
+
+// ERASE
+bool HXSYM(erase)(HXSTRUCT *table, const char *key)
+{
+	return HXSYM(erasen)(table, key, strlen(key));
+}
+
+
 // hashing function
-long long unsigned HXSYM(hash)(const char *str)
+long long unsigned HXSYM(hash)(const char *str, size_t len)
 {
 	long long unsigned hash = 0;
 	long long unsigned pop = 1;
 
-	while (*str)
+	for (size_t i = 0; i < len; ++i)
 	{
-		hash = (hash + (*str - 'a' + 1) * pop) % HXHASH_M;
+		hash = (hash + (str[i] - 'a' + 1) * pop) % HXHASH_M;
 		pop = (pop * HXHASH_P) % HXHASH_M;
-		str += 1;
 	}
 
 	return hash;
 }
 
+
 bool HXSYM(empty)(HXSTRUCT *table)
 {
 	return table->count == 0;
 }
+
 
 void HXSYM(clear)(HXSTRUCT *table)
 {
@@ -291,10 +355,12 @@ void HXSYM(clear)(HXSTRUCT *table)
 	table->count = 0;
 }
 
+
 size_t HXSYM(size)(HXSTRUCT *table)
 {
 	return HXSYM(sizes)[table->size_idx];
 }
+
 
 bool HXSYM(shrink)(HXSTRUCT *table)
 {
@@ -315,12 +381,12 @@ bool HXSYM(shrink)(HXSTRUCT *table)
 	return HXSYM(resize)(table, new_idx);
 }
 
-bool HXSYM(swap)(HXSTRUCT *table, const char *a, const char *b)
+bool HXSYM(swapn)(HXSTRUCT *table, const char *a, size_t alen, const char *b, size_t blen)
 {
 	// getting references to elements
-	HXITEM *aref = HXSYM(get_ref)(table, a);
+	HXITEM *aref = HXSYM(getnref)(table, a, alen);
 	if (!aref) return false;
-	HXITEM *bref = HXSYM(get_ref)(table, b);
+	HXITEM *bref = HXSYM(getnref)(table, b, blen);
 	if (!bref) return false;
 
 	// swapping elements
@@ -330,6 +396,12 @@ bool HXSYM(swap)(HXSTRUCT *table, const char *a, const char *b)
 
 	// success
 	return true;
+}
+
+
+bool HXSYM(swap)(HXSTRUCT *table, const char *a, const char *b)
+{
+	return HXSYM(swapn)(table, a, strlen(a), b, strlen(b));
 }
 
 #endif
