@@ -57,14 +57,17 @@ extern bool HXSYM(setref)(HXSTRUCT *table, const char* key, HXITEM *value);
 extern bool HXSYM(setnref)(HXSTRUCT *table, const char* key, size_t len, HXITEM *value);
 extern HXITEM HXSYM(get)(HXSTRUCT *table, const char *key);
 extern HXITEM HXSYM(getn)(HXSTRUCT *table, const char *key, size_t len);
-extern HXITEM *HXSYM(getnref)(HXSTRUCT *table, const char *key, size_t len);
 extern HXITEM *HXSYM(getref)(HXSTRUCT *table, const char *key);
+extern HXITEM *HXSYM(getnref)(HXSTRUCT *table, const char *key, size_t len);
 extern bool HXSYM(contains)(HXSTRUCT *table, const char *key);
+extern bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len);
 extern bool HXSYM(empty)(HXSTRUCT *table);
 extern void HXSYM(clear)(HXSTRUCT *table);
 extern bool HXSYM(erase)(HXSTRUCT *table, const char *key);
+extern bool HXSYM(erasen)(HXSTRUCT *table, const char *key, size_t len);
 extern bool HXSYM(shrink)(HXSTRUCT *table);
 extern bool HXSYM(swap)(HXSTRUCT *table, const char *a, const char *b);
+extern bool HXSYM(swapn)(HXSTRUCT *table, const char *a, size_t alen, const char *b, size_t blen);
 extern size_t HXSYM(size)(HXSTRUCT *table);
 extern bool HXSYM(resize)(HXSTRUCT *table, unsigned new_size_idx);
 
@@ -285,11 +288,7 @@ HXITEM HXSYM(get)(HXSTRUCT *table, const char *key)
 	// initialized to 0 in case key is never found
 	HXITEM t = {0};
 	HXNODE *node = HXSYM(getnode)(table, key, strlen(key));
-	return (node) ? node->value : t;
-}
-
-
-// CONTAINS N
+	return (node) ? node->value : t;bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len)
 bool HXSYM(containsn)(HXSTRUCT *table, const char *key, size_t len)
 {
 	return (HXSYM(getnode)(table, key, len)) ? true : false;
