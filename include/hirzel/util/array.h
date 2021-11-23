@@ -81,10 +81,13 @@ void nullDestErrorHxArray(const char *func_name, HxArray *array)
 
 HxArray *createHxArray(size_t element_size, size_t capacity)
 {
-	HxArray *out = malloc(sizeof(HxArray));
-	void *data = malloc(element_size * capacity);
 
-	if (!out || !data)
+	HxArray *out = malloc(sizeof(HxArray));
+	void *data = capacity > 0
+		? malloc(element_size * capacity)
+		: NULL;
+
+	if (!out || (capacity > 0 && !data))
 	{
 		free(out);
 		free(data);

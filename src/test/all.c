@@ -29,8 +29,7 @@ int main()
 {
 	const char *tests[] =
 	{
-		"test_list",
-		"test_table"
+		"./test_array"
 	};
 	
 	size_t test_count = sizeof(tests) / sizeof(tests[0]);
@@ -42,8 +41,11 @@ int main()
 			fail_count += 1;
 	}
 
+	
 	if (!fail_count)
-		puts("All tests succeeded");
+		puts("all tests succeeded");
+	else
+		printf("%d tests succeeded", fail_count);
 
 	return fail_count;
 }
