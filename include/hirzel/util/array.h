@@ -325,11 +325,9 @@ void setHxArray(HxArray *array, size_t pos, const void *item)
 	if (!array)
 		nullArrayErrorHxArray(__func__);
 	if (!item)
-		errorHxArray(__func__, "attempted to write (%zu) byte element from NULL",
-			array->element_size);
+		nullSourceErrorHxArray(__func__, array);
 	if (pos >= array->length)
-		errorHxArray(__func__, "attempted to get (%zu) byte element at pos [%zu] but length was (%zu)",
-			array->element_size, pos, array->length);
+		accessErrorHxArray(__func__, array, pos);
 #endif
 
 	void *dest = (char*)array->data + pos * array->element_size;

@@ -1,5 +1,3 @@
-#include <hirzel/util/array.h>
-
 #define HIRZEL_DEBUG
 #define HIRZEL_IMPLEMENT
 #include <hirzel/util/array.h>
@@ -8,7 +6,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-void assertDefaultArray(HxArray *arr, size_t element_size, size_t capacity)
+void assertDefaultHxArray(HxArray *arr, size_t element_size, size_t capacity)
 {
 	assert(arr != NULL);
 	assert(arr->length == 0);
@@ -25,11 +23,11 @@ void testCreate()
 	puts("\tTesting createHxArray()");
 
 	HxArray *a = createHxArray(sizeof(int), 0);
-	assertDefaultArray(a, sizeof(int), 0);
+	assertDefaultHxArray(a, sizeof(int), 0);
 	destroyHxArray(a);
 
 	HxArray *b = createHxArray(sizeof(double), 10);
-	assertDefaultArray(b, sizeof(double), 10);
+	assertDefaultHxArray(b, sizeof(double), 10);
 	destroyHxArray(b);
 }
 
