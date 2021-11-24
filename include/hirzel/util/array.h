@@ -31,8 +31,8 @@ extern void *atHxArray(HxArray *array, size_t i);
 extern void *frontHxArray(HxArray *array);
 extern void *backHxArray(HxArray *array);
 extern void swapHxArray(HxArray *array, void *tmp, size_t a, size_t b);
-extern bool isEmptyHxArray(HxArray *array);
 extern void clearHxArray(HxArray *array);
+extern bool isEmptyHxArray(HxArray *array);
 
 #endif
 
@@ -165,7 +165,7 @@ bool pushFrontHxArray(HxArray *array, const void *item)
 	if (!incrementHxArray(array))
 		return false;
 
-	for (size_t i = 1; i < array->length; ++i)
+	for (size_t i = array->length - 1; i >= 1; --i)
 	{
 		char *dest = (char*)array->data + i * array->element_size;
 		const char *src = (char*)array->data + (i - 1) * array->element_size;
@@ -192,10 +192,10 @@ bool insertHxArray(HxArray *array, size_t pos, const void *item)
 	if (!incrementHxArray(array))
 		return false;
 
-	for (size_t i = array->length - 1 ; i >= pos + 1; ++i)
+	for (size_t i = array->length; i > pos; --i)
 	{
-		char *dest = (char*)array->data + i * array->element_size;
-		const char *src = (char*)array->data + (i - 1) * array->element_size;
+		char *dest = (char*)array->data + (i - 1) * array->element_size;
+		const char *src = (char*)array->data + (i - 2) * array->element_size;
 
 		memcpy(dest, src, array->element_size);
 	}
@@ -380,16 +380,6 @@ void *backHxArray(HxArray *array)
 	return (char*)array->data + (array->length - 1) * array->element_size;
 }
 
-bool isEmptyHxArray(HxArray *array)
-{
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
-
-	return array->length == 0;
-}
-
 void clearHxArray(HxArray *array)
 {
 #ifdef HIRZEL_DEBUG
@@ -398,6 +388,16 @@ void clearHxArray(HxArray *array)
 #endif
 
 	array->length = 0;
+}
+
+bool isEmptyHxArray(HxArray *array)
+{
+#ifdef HIRZEL_DEBUG
+	if (!array)
+		nullArrayErrorHxArray(__func__);
+#endif
+
+	return array->length == 0;
 }
 
 #endif
