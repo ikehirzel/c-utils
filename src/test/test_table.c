@@ -1,10 +1,16 @@
-#define HIRZEL_DEBUG
 #define HIRZEL_IMPLEMENT
 #include <hirzel/util/table.h>
 
 // standard library
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
+
+const char * const valid_keys[] = {
+	"abc", "def", "hij", "klm", "nop", "qrs", "tuv", "wxy", "z"
+};
+
+const size_t valid_key_count = sizeof(valid_keys) / sizeof(*valid_keys);
 
 void testCreate()
 {

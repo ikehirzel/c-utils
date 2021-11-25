@@ -15,10 +15,11 @@ typedef struct HxArray
 } 
 HxArray;
 
-extern HxArray *createHxArray(size_t element_size, size_t capacity);
+extern HxArray *createHxArray(size_t element_size);
 extern void destroyHxArray(HxArray *array);
-extern bool incrementHxArray(HxArray *array);
+extern bool reserveHxArray(HxArray *array, size_t new_capacity);
 extern bool resizeHxArray(HxArray *array, size_t new_size);
+extern bool incrementHxArray(HxArray *array);
 extern bool pushHxArray(HxArray *array, const void *item);
 extern bool pushFrontHxArray(HxArray *array, const void *item);
 extern bool insertHxArray(HxArray *array, size_t pos, const void *item);
@@ -39,234 +40,60 @@ extern bool isEmptyHxArray(HxArray *array);
 #if defined(HIRZEL_IMPLEMENT) && !defined(HIRZEL_UTIL_ARRAY_I)
 #define HIRZEL_UTIL_ARRAY_I
 
-#ifdef HIRZEL_DEBUG
+#include <assert.h>
 
-#include <stdio.h>
-#include <stdarg.h>
-
-void errorHxArray(const char *func_name, const char *fmt, ...)
+HxArray *createHxArray(size_t element_size)
 {
-	va_list args;
-	va_start(args, fmt);
-	fprintf(stderr, "%s: ", func_name);
-	vfprintf(stderr, fmt, args);
-	putchar('\n');
-	abort();
-}
-
-void accessErrorHxArray(const char *func_name, const HxArray *array, size_t pos)
-{
-	errorHxArray(func_name, "attempted to access (%zu) byte element at position (%zu) but length was (%zu)",
-		array->element_size, pos, array->length);
-}
-
-void nullArrayErrorHxArray(const char *func_name)
-{
-	errorHxArray(func_name, "attempted to access array at NULL");
-}
-
-void nullSourceErrorHxArray(const char *func_name, const HxArray *array)
-{
-	errorHxArray(func_name, "attempted to read (%zu) byte element from NULL",
-		array->element_size);
-}
-
-void nullDestErrorHxArray(const char *func_name, const HxArray *array)
-{
-	errorHxArray(func_name, "attempted to write (%zu) byte element to NULL",
-		array->element_size);
-}
-
-#endif
-
-HxArray *createHxArray(size_t element_size, size_t capacity)
-{
+	assert(element_size > 0);
 
 	HxArray *out = malloc(sizeof(HxArray));
-	void *data = capacity > 0
-		? malloc(element_size * capacity)
-		: NULL;
 
-	if (!out || (capacity > 0 && !data))
-	{
-		free(out);
-		free(data);
-	}
-	else 
-	{
-		out->data = data;
-		out->element_size = element_size;
-		out->length = 0;
-		out->capacity = capacity;
-	}
+	if (!out)
+		return NULL;
+
+	*out = (HxArray) {
+		.data = NULL,
+		.element_size = element_size,
+		.length = 0,
+		.capacity = 0
+	};
 
 	return out;
 }
 
 void destroyHxArray(HxArray *array)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
+	assert(array != NULL);
 
 	free(array->data);
 	free(array);
 }
 
-bool incrementHxArray(HxArray *array)
+bool reserveHxArray(HxArray *array, size_t capacity)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
+	assert(array != NULL);
 
-	if (array->length == array->capacity)
+	if (capacity == 0)
 	{
-		size_t new_size = (array->length + 1) * array->element_size;
-		void *new_buffer = realloc(array->data, new_size);
+		free(array->data);
+		array->data = NULL;
+	}
+	else
+	{
+		void *tmp = realloc(array->data, capacity * array->element_size);
 
-		if (!new_buffer)
+		if (!tmp)
 			return false;
 
-		array->data = new_buffer;
-		array->capacity += 1;
+		array->data = tmp;
 	}
-
-	array->length += 1;
 
 	return true;
-}
-
-bool pushHxArray(HxArray *array, const void *item)
-{
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
-
-	if (!incrementHxArray(array))
-		return false;
-
-	char *dest = (char*)array->data + (array->length - 1) * array->element_size;
-
-	memcpy(dest, item, array->element_size);	
-	
-	return true;
-}
-
-bool pushFrontHxArray(HxArray *array, const void *item)
-{
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
-
-	if (!incrementHxArray(array))
-		return false;
-
-	for (size_t i = array->length - 1; i >= 1; --i)
-	{
-		char *dest = (char*)array->data + i * array->element_size;
-		const char *src = (char*)array->data + (i - 1) * array->element_size;
-
-		memcpy(dest, src, array->element_size);
-	}
-
-	memcpy(array->data, item, array->element_size);
-
-	return true;
-}
-
-bool insertHxArray(HxArray *array, size_t pos, const void *item)
-{
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (!item)
-		nullSourceErrorHxArray(__func__, array);
-	if (pos > array->length)
-		accessErrorHxArray(__func__, array, pos);
-#endif
-
-	if (!incrementHxArray(array))
-		return false;
-
-	for (size_t i = array->length; i > pos; --i)
-	{
-		char *dest = (char*)array->data + (i - 1) * array->element_size;
-		const char *src = (char*)array->data + (i - 2) * array->element_size;
-
-		memcpy(dest, src, array->element_size);
-	}
-	
-	char *dest = (char*)array->data + pos * array->element_size;
-
-	memcpy(dest, item, array->element_size);
-
-	return true;
-}
-
-void popHxArray(HxArray *array)
-{
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
-
-	if (array->length == 0)
-		return;
-	
-	array->length -= 1;
-}
-
-void popFrontHxArray(HxArray *array)
-{
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
-
-	if (array->length == 0)
-		return;
-
-	array->length -= 1;
-
-	const size_t element_size = array->element_size;
-	const char *end = (char*)array->data + array->length * element_size;
-
-	for (char *dest = array->data; dest < end; dest += element_size)
-	{
-		memcpy(dest, dest + element_size, element_size);
-	}
-}
-
-void eraseHxArray(HxArray *array, size_t pos)
-{	
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (pos >= array->length)
-		accessErrorHxArray(__func__, array, pos);
-#endif
-
-	for (size_t i = pos + 1; i < array->length; ++i)
-	{
-		char *dest = (char*)array->data + (i - 1) * array->element_size;
-		const char *src = (char*)array->data + i * array->element_size;
-
-		memcpy(dest, src, array->element_size);
-	}
-
-	array->length -= 1;
 }
 
 bool resizeHxArray(HxArray *array, size_t new_length)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
+	assert(array != NULL);
 
 	if (array->length == new_length)
 		return true;
@@ -291,16 +118,136 @@ bool resizeHxArray(HxArray *array, size_t new_length)
 	return true;	
 }
 
+bool incrementHxArray(HxArray *array)
+{
+	assert(array != NULL);
+
+	if (array->length == array->capacity)
+	{
+		size_t new_size = (array->length + 1) * array->element_size;
+		void *new_buffer = realloc(array->data, new_size);
+
+		if (!new_buffer)
+			return false;
+
+		array->data = new_buffer;
+		array->capacity += 1;
+	}
+
+	array->length += 1;
+
+	return true;
+}
+
+bool pushHxArray(HxArray *array, const void *item)
+{
+	assert(array != NULL);
+	assert(item != NULL);
+
+	if (!incrementHxArray(array))
+		return false;
+
+	char *dest = (char*)array->data + (array->length - 1) * array->element_size;
+
+	memcpy(dest, item, array->element_size);	
+	
+	return true;
+}
+
+bool pushFrontHxArray(HxArray *array, const void *item)
+{
+	assert(array != NULL);
+	assert(item != NULL);
+
+	if (!incrementHxArray(array))
+		return false;
+
+	for (size_t i = array->length - 1; i >= 1; --i)
+	{
+		char *dest = (char*)array->data + i * array->element_size;
+		const char *src = (char*)array->data + (i - 1) * array->element_size;
+
+		memcpy(dest, src, array->element_size);
+	}
+
+	memcpy(array->data, item, array->element_size);
+
+	return true;
+}
+
+bool insertHxArray(HxArray *array, size_t pos, const void *item)
+{
+	assert(array != NULL);
+	assert(pos <= array->length);
+	assert(item != NULL);
+
+	if (!incrementHxArray(array))
+		return false;
+
+	for (size_t i = array->length; i > pos; --i)
+	{
+		char *dest = (char*)array->data + (i - 1) * array->element_size;
+		const char *src = (char*)array->data + (i - 2) * array->element_size;
+
+		memcpy(dest, src, array->element_size);
+	}
+	
+	char *dest = (char*)array->data + pos * array->element_size;
+
+	memcpy(dest, item, array->element_size);
+
+	return true;
+}
+
+void popHxArray(HxArray *array)
+{
+	assert(array != NULL);
+
+	if (array->length == 0)
+		return;
+	
+	array->length -= 1;
+}
+
+void popFrontHxArray(HxArray *array)
+{
+	assert(array != NULL);
+
+	if (array->length == 0)
+		return;
+
+	array->length -= 1;
+
+	const size_t element_size = array->element_size;
+	const char *end = (char*)array->data + array->length * element_size;
+
+	for (char *dest = array->data; dest < end; dest += element_size)
+	{
+		memcpy(dest, dest + element_size, element_size);
+	}
+}
+
+void eraseHxArray(HxArray *array, size_t pos)
+{
+	assert(array != NULL);
+	assert(pos < array->length);
+
+	for (size_t i = pos + 1; i < array->length; ++i)
+	{
+		char *dest = (char*)array->data + (i - 1) * array->element_size;
+		const char *src = (char*)array->data + i * array->element_size;
+
+		memcpy(dest, src, array->element_size);
+	}
+
+	array->length -= 1;
+}
+
 void getHxArray(HxArray *array, void *out, size_t pos)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (!out)
-		nullDestErrorHxArray(__func__, array);		
-	if (pos >= array->length)
-		accessErrorHxArray(__func__, array, pos);
-#endif
+	assert(array != NULL);
+	assert(out != NULL);
+	assert(pos < array->length);
 
 	void *src = (char*)array->data + pos * array->element_size;
 
@@ -309,45 +256,31 @@ void getHxArray(HxArray *array, void *out, size_t pos)
 
 void *atHxArray(HxArray *array, size_t pos)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (pos >= array->length)
-		accessErrorHxArray(__func__, array, pos);
-#endif
+	assert(array != NULL);
+	assert(pos < array->length);
 
 	return (char*)array->data + pos * array->element_size;
 }
 
 void setHxArray(HxArray *array, size_t pos, const void *item)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (!item)
-		nullSourceErrorHxArray(__func__, array);
-	if (pos >= array->length)
-		accessErrorHxArray(__func__, array, pos);
-#endif
+	assert(array != NULL);
+	assert(pos < array->length);
+	assert(item != NULL);
 
 	void *dest = (char*)array->data + pos * array->element_size;
 	memcpy(dest, item, array->element_size);
 }
 
-void swapHxArray(HxArray *array, void *tmp, size_t a, size_t b)
+void swapHxArray(HxArray *array, void *tmp, size_t pos_a, size_t pos_b)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (!tmp)
-		nullDestErrorHxArray(__func__, array);
-	if (a >= array->length)
-		accessErrorHxArray(__func__, array, a);
-	if (b >= array->length)
-		accessErrorHxArray(__func__, array, b);
-#endif
-	void *a_ptr = (char*)array->data + a * array->element_size;
-	void *b_ptr = (char*)array->data + b * array->element_size;
+	assert(array != NULL);
+	assert(tmp != NULL);
+	assert(pos_a < array->length);
+	assert(pos_b < array->length);
+
+	void *a_ptr = (char*)array->data + pos_a * array->element_size;
+	void *b_ptr = (char*)array->data + pos_b * array->element_size;
 
 	memcpy(tmp, a_ptr, array->element_size);
 	memcpy(a_ptr, b_ptr, array->element_size);
@@ -356,44 +289,30 @@ void swapHxArray(HxArray *array, void *tmp, size_t a, size_t b)
 
 void *frontHxArray(HxArray *array)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (array->length == 0)
-		accessErrorHxArray(__func__, array, 0);
-#endif
+	assert(array != NULL);
+	assert(array->length > 0);
 
 	return array->data;
 }
 
 void *backHxArray(HxArray *array)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-	if (array->length == 0)
-		accessErrorHxArray(__func__, array, array->length - 1);
-#endif
+	assert(array != NULL);
+	assert(array->length > 0);
 
 	return (char*)array->data + (array->length - 1) * array->element_size;
 }
 
 void clearHxArray(HxArray *array)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
+	assert(array != NULL);
 
 	array->length = 0;
 }
 
 bool isEmptyHxArray(HxArray *array)
 {
-#ifdef HIRZEL_DEBUG
-	if (!array)
-		nullArrayErrorHxArray(__func__);
-#endif
+	assert(array != NULL);
 
 	return array->length == 0;
 }
