@@ -2,21 +2,12 @@
 #define HIRZEL_UTIL_TABLE_H
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdbool.h>
 
-#define HIRZEL_UTIL_TABLE_HASH_P	(97)
-#define HIRZEL_UTIL_TABLE_HASH_M	(1000000009)
-
-/*
-	this has precomputed prime numbers that are at least double the previous
-	entry. The purpose of this is to store the sizes of the array and allows
-	for up to multiple gigabytes of data to be stored with the maximum size
-*/
 typedef struct HxTableNode
 {
 	char *key;
-	void *data;
+	void *value;
 	bool deleted;
 }
 HxTableNode;
@@ -30,225 +21,309 @@ typedef struct HxTable
 }
 HxTable;
 
-extern const size_t HxTable_sizes[];
-
 extern size_t hashHxTable(const char *str);
 extern HxTable *createHxTable(size_t element_size);
 extern void destroyHxTable(HxTable *table);
-extern bool resizeHxTable(HxTable *table, unsigned new_size_idx);
-extern bool setHxTable(HxTable *table, const char* key, void *value);
-extern void getHxTable(HxTable *table, void *out, const char *key);
-extern void *atHxTable(HxTable *table, const char *key);
-extern HxTableNode *getnodeHxTable(HxTable *table, const char *key);
-extern bool containsHxTable(HxTable *table, const char *key);
-extern bool eraseHxTable(HxTable *table, const char *key);
+extern bool resizeHxTable(HxTable *table, size_t new_size_index);
 extern bool shrinkHxTable(HxTable *table);
-extern bool swapHxTable(HxTable *table, const char *a, const char *b);
+extern bool setHxTable(HxTable *table, const char* key, void *value);
+extern void eraseHxTable(HxTable *table, const char *key);
+extern bool getHxTable(const HxTable *table, void *out, const char *key);
+extern void *atHxTable(const HxTable *table, const char *key);
+extern HxTableNode *findNodeHxTable(const HxTable *table, const char *key);
+extern bool containsHxTable(HxTable *table, const char *key);
 extern size_t sizeHxTable(HxTable *table);
+extern bool swapHxTable(HxTable *table, void *tmp, const char *a, const char *b);
 extern void clearHxTable(HxTable *table);
-extern bool isEmptyHxTable(HxTable *table);
+extern bool isEmptyHxTable(const HxTable *table);
+
+#endif
 
 #if defined(HIRZEL_IMPLEMENT) && !defined(HIRZEL_UTIL_TABLE_I)
 #define HIRZEL_UTIL_TABLE_I
 
-const size_t HxTable_sizes[] = {
+#define HIRZEL_UTIL_TABLE_HASH_P	(97)
+#define HIRZEL_UTIL_TABLE_HASH_M	(1000000009)
+
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef HIRZEL_DEBUG
+#include <stdio.h>
+#include <stdarg.h>
+#endif
+
+static const size_t HxTable_sizes[] = {
 	11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853,
 	25717, 51437, 102877, 205759, 411527, 823117, 1646237, 3292489, 6584983,
 	13169977, 26339969, 52679969, 105359939, 210719881, 421439783, 842879579,
 	1685759167, 3371518343, 6743036717
 };
+static const size_t HxTable_size_count = sizeof(HxTable_sizes) / sizeof(*HxTable_sizes);
 
-static HxTableNode createHxTableNode(const char *key, void *value)
+void errorHxTable(const char *func_name, const char *fmt, ...)
 {
-	HxTableNode node = {0};
-
-	if (key)
-	{
-		// copying over key
-		size_t len = strlen(key);
-		node.key = malloc(len + 1);
-		strcpy(node.key, key);
-	}
-
-	if (value) node.value = *value;
-
-	node.deleted = false;
-
-	return node;
+	va_list args;
+	va_start(args, fmt);
+	fprintf(stderr, "%s: ", func_name);
+	vfprintf(stderr, fmt, args);
+	putchar('\n');
+	abort();
 }
 
-HxTable *createHxTable()
+static void nullTableErrorHxTable(const char *func_name)
 {
-	HxTable *table = malloc(sizeof(HxTable));
-	if (!table) return NULL;
-	table->data = calloc(sizes)[0], sizeof(HxTableNode));
+	errorHxTable(func_name, "attempted to access table with table = NULL");
+}
 
-	if (!table->data)
+static void nullNodeErrorHxTable(const char *func_name, const HxTable *table)
+{
+	errorHxTable(func_name, "attempted to access (%zu) byte element node with node = NULL",
+		table->element_size);
+}
+
+static void nullKeyErrorHxTable(const char *func_name, const HxTable *table)
+{
+	errorHxTable(func_name, "attempted to access (%zu) byte element with key = NULL",
+		table->element_size);
+}
+
+static void nullValueErrorHxTable(const char *func_name, const HxTable *table)
+{
+	errorHxTable(func_name, "attempted to write (%zu) byte element with value = NULL",
+		table->element_size);
+}
+
+static bool initHxTableNode(const HxTable *table, HxTableNode *out, const char *key, const void *value)
+{
+#ifdef HIRZEL_DEBUG
+	if (!table)
+		nullTableErrorHxTable(__func__);
+	if (!out)
+		nullNodeErrorHxTable(__func__, table);
+	if (!key)
+		nullKeyErrorHxTable(__func__, table);
+	if (!value)
+		nullValueErrorHxTable(__func__, table);
+#endif
+
+	size_t key_len = strlen(key);
+	void *buffer = malloc(table->element_size + key_len + 1);
+
+	if (!buffer)
+		return false;
+
+	*out = (HxTableNode) {
+		.key = (char*)buffer + table->element_size,
+		.value = buffer,
+		.deleted = false
+	};
+
+	strcpy(out->key, key);
+	memcpy(out->value, value, table->element_size);
+
+	return true;
+}
+
+static void deleteHxTableNode(HxTableNode *node)
+{
+#ifdef HIRZEL_DEBUG
+	if (!node)
+		errorHxTable(__func__, "attempted to delete node with node = NULL");
+#endif
+
+	free(node->value);
+
+	node->key = NULL;
+	node->value = NULL;
+	node->deleted = true;
+}
+
+HxTable *createHxTable(size_t element_size)
+{
+#ifdef HIRZEL_DEBUG
+	if (element_size == 0)
+		errorHxTable(__func__, "attempted to create table with 0 byte elements");
+#endif
+
+	HxTable *table = malloc(sizeof(HxTable));
+	void *data = calloc(HxTable_sizes[0], sizeof(HxTableNode));
+
+	if (!table || !data)
 	{
 		free(table);
+		free(data);
+
 		return NULL;
 	}
-	table->size_idx = 0;
-	table->count = 0;
+
+	*table = (HxTable) {
+		.data = data,
+		.size_index = 0,
+		.count = 0,
+		.element_size = element_size
+	};
+
 	return table;
 }
 
 void destroyHxTable(HxTable *table)
 {
-	size_t size = sizes)[table->size_idx];
+#ifdef HIRZEL_DEBUG
+	if (!table)
+		nullTableErrorHxTable(__func__);
+#endif
+
+	size_t size = HxTable_sizes[table->size_index];
+	
 	for (size_t i = 0; i < size; ++i)
 	{
-		if (!table->data[i].key) continue;
-		// if there is data in the bucket
-		free(table->data[i].key);
+		void *value = table->data[i].value;
+
+		if (value)
+			free(value);		
 	}
+
 	free(table);
 }
 
-bool resizeHxTable(HxTable *table, unsigned new_size_idx)
+bool resizeHxTable(HxTable *table, size_t new_size_index)
 {
-	// do nothing if new size is same as old
-	if (new_size_idx == table->size_idx) return true;
-	// fail if new size not big enough for data
-	if (sizes)[new_size_idx] < table->count) return false;
-	// storing old data
-	HxTableNode *tmp = table->data;
-	size_t tmpc = sizes)[table->size_idx];
+#ifdef HIRZEL_DEBUG
+	if (!table)
+		nullTableErrorHxTable(__func__);
+	if (new_size_index >= HxTable_size_count)
+		errorHxTable(__func__, "attempted to resize table with out of bounds size index: %zu",
+			new_size_index);
+#endif
 
-	// pointing to new data
-	table->data = calloc(sizes)[new_size_idx], sizeof(HxTableNode));
+	if (new_size_index == table->size_index)
+		return true;
 
-	if (!table->data)
-	{
-		// clean up and exit
-		table->data = tmp;
+	if (HxTable_sizes[new_size_index] < table->count)
 		return false;
-	}
 
-	table->size_idx = new_size_idx;
+	void *new_data = calloc(HxTable_sizes[new_size_index], sizeof(HxTableNode));
 
-	// copying over old data
-	for (size_t i = 0; i < tmpc; ++i)
+	if (!new_data)
+		return false;
+
+	HxTableNode *old_data = table->data;
+	size_t old_size = HxTable_sizes[table->size_index];
+
+	table->data = new_data;
+	table->size_index = new_size_index;
+
+	for (size_t i = 0; i < old_size; ++i)
 	{
-		if (tmp[i].key)
+		if (old_data[i].key)
 		{
-			HxTableNode *tnode = getnodeHxTabletable, tmp[i].key);
-			*tnode = tmp[i];
+			HxTableNode *tnode = findNodeHxTable(table, old_data[i].key);
+			*tnode = old_data[i];
 		}
 	}
 
-	free(tmp);
+	free(old_data);
+
 	return true;
 }
 
 bool setHxTable(HxTable *table, const char* key, void *value)
 {
 #ifdef HIRZEL_DEBUG
+	if (!table)
+		nullTableErrorHxTable(__func__);
 	if (!key)
-		return false;
+		nullKeyErrorHxTable(__func__, table);
+	if (!value)
+		nullValueErrorHxTable(__func__, table);
 #endif
-	size_t size = sizes)[table->size_idx];
-	// resizing when table is about half way full
-	if ((size / (table->count + 1)) <= 1)
-	{
-		// getting new size of hash table
-		// this will never fail, but it will stop growing after the last item
-		// is reached but this will likeyly never happen
-		unsigned new_idx = table->size_idx;
-		// if there is room to grow
-		if (new_idx < (sizeof(sizes)) / sizeof(size_t)) - 1)
-		{
-			new_idx += 1;
-		}
 
-		if (!resizeHxTabletable, new_idx)) return false;
+	size_t size = HxTable_sizes[table->size_index];
+	bool is_table_half_full = (size / (table->count + 1)) <= 1;
+
+	if (is_table_half_full)
+	{
+		size_t new_size_index = table->size_index;
+		
+		if (new_size_index < HxTable_size_count - 1)
+			new_size_index += 1;
+
+		if (!resizeHxTable(table, new_size_index))
+			return false;
 	}
 	
-	HxTableNode *node = getnodeHxTabletable, key);
-	// node is unset
+	HxTableNode *node = findNodeHxTable(table, key);
+	
 	if (!node->key)
 	{
-		*node = node_createHxTablekey, value);
+		if (!initHxTableNode(table, node, key, value))
+			return false;
+
 		table->count += 1;
 	}
-	// node already exists
 	else
 	{
-		node->value = *value;
+		memcpy(node->value, value, table->element_size);
 	}
 
 	return true;
 }
 
-
-// SET
-bool setHxTable(HxTable *table, const char* key, void value)
+HxTableNode *findNodeHxTable(const HxTable *table, const char *key)
 {
-	return setrefHxTabletable, key, &value);
-}
-
-
-HxTableNode *getnodeHxTable(HxTable *table, const char *key)
-{
-	size_t size = sizes)[table->size_idx];
-	// starting position for search
-	size_t hash = hashHxTablekey);
+	size_t size = HxTable_sizes[table->size_index];
+	size_t hash = hashHxTable(key);
 
 	size_t i = hash % size;
 	size_t step = 0;
+
 	while (true)
 	{
 		HxTableNode *node = table->data + i;
-		if (!node->key)
-		{
-			if (!node->deleted) break;
-		}
-		else if (!strcmp(node->key, key)) break;
+
+		if (!node->key && !node->deleted)	
+			break;		
+		else if (!strcmp(node->key, key))
+			break;
 		step += 1;
 		i = (hash + step * step) % size;
 	}
 
-	return table->data + i;
+	HxTableNode *out = table->data + i;
+
+	return out;
 }
 
-
-// GET REF
-void *getrefHxTable(HxTable *table, const char *key)
+bool getHxTable(const HxTable *table, void *out, const char *key)
 {
-	HxTableNode *node = getnodeHxTabletable, key);
-	return (node->key) ? &node->value : NULL;
-}
+	HxTableNode *node = findNodeHxTable(table, key);
 
-
-// GET
-void getHxTable(HxTable *table, const char *key)
-{
-	// initialized to 0 in case key is never found
-	void t = {0};
-	HxTableNode *node = getnodeHxTabletable, key);
-	return (node->key) ? node->value : t;
+	if (!node->key)
+		return false;
 	
+	memcpy(out, node->value, table->element_size);
+
+	return true;
 }
 
-
-// CONTAINS
 bool containsHxTable(HxTable *table, const char *key)
 {
-	return getnodeHxTabletable, key)->key ? true : false;
+	HxTableNode *node = findNodeHxTable(table, key);
+	bool contains_key = node->key ? true : false;
+
+	return contains_key;
 }
 
-
-// ERASE
-bool eraseHxTable(HxTable *table, const char *key)
+void eraseHxTable(HxTable *table, const char *key)
 {
-	HxTableNode *node = getnodeHxTabletable, key);
-	if (!node->key) return false;
-	// destroying node
-	free(node->key);
-	node->deleted = true;
-	node->key = NULL;
+	HxTableNode *node = findNodeHxTable(table, key);
+
+	if (!node->key)
+		return;
+
+	deleteHxTableNode(node);
 	table->count -= 1;
-	return true;
 }
 
 size_t hashHxTable(const char *str)
@@ -258,26 +333,28 @@ size_t hashHxTable(const char *str)
 
 	while (*str)
 	{
-		hash = (hash + (*str - 'a' + 1) * pop) % HXHASH_M;
-		pop = (pop * HXHASH_P) % HXHASH_M;
+		hash = (hash + (*str - 'a' + 1) * pop) % HIRZEL_UTIL_TABLE_HASH_M;
+		pop = (pop * HIRZEL_UTIL_TABLE_HASH_P) % HIRZEL_UTIL_TABLE_HASH_M;
 		str += 1;
 	}
 
 	return hash;
 }
 
-bool isEmptyHxTable(HxTable *table)
+bool isEmptyHxTable(const HxTable *table)
 {
 	return table->count == 0;
 }
 
 void clearHxTable(HxTable *table)
 {
-	size_t size = sizes)[table->size_idx];
+	size_t size = HxTable_sizes[table->size_index];
+
 	for (size_t i = 0; i < size; ++i)
 	{
 		table->data[i].key = NULL;
 	}
+
 	table->count = 0;
 }
 
@@ -288,38 +365,42 @@ size_t sizeHxTable(HxTable *table)
 
 bool shrinkHxTable(HxTable *table)
 {
-	unsigned new_idx = 0;
-	// find minimum size for current count
-	for (unsigned i = 0; i < table->size_idx; ++i)
+	size_t new_size_index = 0;
+	
+	for (size_t i = 0; i < table->size_index; ++i)
 	{
-		// get size from array
-		size_t size = sizes)[i];
-		// check if size is double or more than the count
-		if ((size / table->count) > 1)
+		size_t new_size = HxTable_sizes[i];
+		bool would_be_less_than_half_full = (new_size / table->count) > 1;
+
+		if (would_be_less_than_half_full)
 		{
-			new_idx = i;
+			new_size_index = i;
 			break;
 		}
 	}
 
-	return resizeHxTabletable, new_idx);
+	bool is_resized = resizeHxTable(table, new_size_index);
+
+	return is_resized;
 }
 
 
-bool swapHxTable(HxTable *table, const char *a, const char *b)
+bool swapHxTable(HxTable *table, void *tmp, const char *a, const char *b)
 {
-	// getting references to elements
-	HxTableNode *nodea = getnodeHxTabletable, a);
-	if (!nodea->key) return false;
-	HxTableNode *nodeb = getnodeHxTabletable, b);
-	if (!nodeb->key) return false;
+	HxTableNode *node_a = findNodeHxTable(table, a);
 
-	// swapping elements
-	void item = nodea->value;
-	nodea->value = nodeb->value;
-	nodeb->value = item;
+	if (!node_a->key)
+		return false;
 
-	// success
+	HxTableNode *node_b = findNodeHxTable(table, b);
+
+	if (!node_b->key)
+		return false;
+
+	memcpy(tmp, node_a->value, table->element_size);
+	memcpy(node_a->value, node_b->value, table->element_size);
+	memcpy(node_b->value, tmp, table->element_size);
+
 	return true;
 }
 

@@ -54,7 +54,7 @@ void errorHxArray(const char *func_name, const char *fmt, ...)
 	abort();
 }
 
-void accessErrorHxArray(const char *func_name, HxArray *array, size_t pos)
+void accessErrorHxArray(const char *func_name, const HxArray *array, size_t pos)
 {
 	errorHxArray(func_name, "attempted to access (%zu) byte element at position (%zu) but length was (%zu)",
 		array->element_size, pos, array->length);
@@ -65,13 +65,13 @@ void nullArrayErrorHxArray(const char *func_name)
 	errorHxArray(func_name, "attempted to access array at NULL");
 }
 
-void nullSourceErrorHxArray(const char *func_name, HxArray *array)
+void nullSourceErrorHxArray(const char *func_name, const HxArray *array)
 {
 	errorHxArray(func_name, "attempted to read (%zu) byte element from NULL",
 		array->element_size);
 }
 
-void nullDestErrorHxArray(const char *func_name, HxArray *array)
+void nullDestErrorHxArray(const char *func_name, const HxArray *array)
 {
 	errorHxArray(func_name, "attempted to write (%zu) byte element to NULL",
 		array->element_size);
