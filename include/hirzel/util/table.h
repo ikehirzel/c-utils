@@ -12,38 +12,41 @@ typedef struct HxTableNode
 }
 HxTableNode;
 
+typedef size_t (*HxHashFunction)(const char *key);
+
 typedef struct HxTable
 {
 	HxTableNode *data;
+	HxHashFunction hash_function;
 	size_t size_index;
 	size_t count;
 	size_t element_size;
 }
 HxTable;
 
-extern size_t hashHxTable(const char *str);
+extern size_t hashStringHxTable(const char *str);
+
 extern HxTable *createHxTable(size_t element_size);
+#define createHxTableOf(type) createHxTable(sizeof(type))
 extern void destroyHxTable(HxTable *table);
 extern bool resizeHxTable(HxTable *table, size_t new_size_index);
+extern bool reserveHxTable(HxTable * table, size_t min_count);
 extern bool shrinkHxTable(HxTable *table);
 extern bool setHxTable(HxTable *table, const char* key, void *value);
 extern void eraseHxTable(HxTable *table, const char *key);
+extern void clearHxTable(HxTable *table);
+extern bool swapHxTable(HxTable *table, void *tmp, const char *a, const char *b);
+
 extern bool getHxTable(const HxTable *table, void *out, const char *key);
 extern void *atHxTable(const HxTable *table, const char *key);
-extern HxTableNode *findNodeHxTable(const HxTable *table, const char *key);
-extern bool containsHxTable(HxTable *table, const char *key);
-extern size_t sizeHxTable(HxTable *table);
-extern bool swapHxTable(HxTable *table, void *tmp, const char *a, const char *b);
-extern void clearHxTable(HxTable *table);
+extern bool containsHxTable(const HxTable *table, const char *key);
+extern size_t sizeHxTable(const HxTable *table);
 extern bool isEmptyHxTable(const HxTable *table);
 
 #endif
 
 #if defined(HIRZEL_IMPLEMENT) && !defined(HIRZEL_UTIL_TABLE_I)
 #define HIRZEL_UTIL_TABLE_I
-
-#define HIRZEL_UTIL_TABLE_HASH_P	(97)
-#define HIRZEL_UTIL_TABLE_HASH_M	(1000000009)
 
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +60,22 @@ static const size_t HxTable_sizes[] = {
 };
 static const size_t HxTable_size_count = sizeof(HxTable_sizes) / sizeof(*HxTable_sizes);
 
-static bool initHxTableNode(const HxTable *table, HxTableNode *out, const char *key, const void *value)
+static size_t getMinSizeIndexHxTable(size_t count)
+{
+	size_t size_index = 0;
+
+	while (size_index < HxTable_size_count)
+	{
+		if (HxTable_sizes[size_index] >= count * 2)
+			break;
+
+		++size_index;
+	}
+
+	return size_index;
+}
+
+static bool initHxTableNode(HxTableNode *out, const HxTable *table, const char *key, const void *value)
 {
 	assert(table != NULL);
 	assert(out != NULL);
@@ -93,6 +111,45 @@ static void deleteHxTableNode(HxTableNode *node)
 	node->deleted = true;
 }
 
+static void clearHxTableNode(HxTableNode *node)
+{
+	assert(node != NULL);
+
+	free(node->value);
+
+	node->key = NULL;
+	node->value = NULL;
+	node->deleted = false;
+}
+
+HxTableNode *findNodeHxTable(const HxTable *table, const char *key)
+{
+	assert(table != NULL);
+	assert(key != NULL);
+
+	size_t size = HxTable_sizes[table->size_index];
+	size_t hash = table->hash_function(key);
+
+	size_t i = hash % size;
+	size_t step = 0;
+
+	while (true)
+	{
+		HxTableNode *node = table->data + i;
+
+		if (!node->key && !node->deleted)	
+			break;		
+		else if (!strcmp(node->key, key))
+			break;
+		step += 1;
+		i = (hash + step * step) % size;
+	}
+
+	HxTableNode *out = table->data + i;
+
+	return out;
+}
+
 HxTable *createHxTable(size_t element_size)
 {
 	assert(element_size > 0);
@@ -110,6 +167,7 @@ HxTable *createHxTable(size_t element_size)
 
 	*table = (HxTable) {
 		.data = data,
+		.hash_function = hashStringHxTable,
 		.size_index = 0,
 		.count = 0,
 		.element_size = element_size
@@ -171,6 +229,16 @@ bool resizeHxTable(HxTable *table, size_t new_size_index)
 	return true;
 }
 
+bool reserveHxTable(HxTable *table, size_t min_count)
+{
+	assert(table != NULL);
+	
+	size_t size_index = getMinSizeIndexHxTable(min_count);
+	bool is_resized = resizeHxTable(table, size_index);
+
+	return is_resized;
+}
+
 bool setHxTable(HxTable *table, const char* key, void *value)
 {
 	assert(table != NULL);
@@ -195,7 +263,7 @@ bool setHxTable(HxTable *table, const char* key, void *value)
 	
 	if (!node->key)
 	{
-		if (!initHxTableNode(table, node, key, value))
+		if (!initHxTableNode(node, table, key, value))
 			return false;
 
 		table->count += 1;
@@ -206,34 +274,6 @@ bool setHxTable(HxTable *table, const char* key, void *value)
 	}
 
 	return true;
-}
-
-HxTableNode *findNodeHxTable(const HxTable *table, const char *key)
-{
-	assert(table != NULL);
-	assert(key != NULL);
-
-	size_t size = HxTable_sizes[table->size_index];
-	size_t hash = hashHxTable(key);
-
-	size_t i = hash % size;
-	size_t step = 0;
-
-	while (true)
-	{
-		HxTableNode *node = table->data + i;
-
-		if (!node->key && !node->deleted)	
-			break;		
-		else if (!strcmp(node->key, key))
-			break;
-		step += 1;
-		i = (hash + step * step) % size;
-	}
-
-	HxTableNode *out = table->data + i;
-
-	return out;
 }
 
 bool getHxTable(const HxTable *table, void *out, const char *key)
@@ -252,7 +292,21 @@ bool getHxTable(const HxTable *table, void *out, const char *key)
 	return true;
 }
 
-bool containsHxTable(HxTable *table, const char *key)
+void *atHxTable(const HxTable *table, const char *key)
+{
+	assert(table != NULL);
+	assert(key != NULL);
+
+	HxTableNode *node = findNodeHxTable(table, key);
+	
+	void *out = node != NULL
+		? node->value
+		: NULL;
+
+	return out;
+}
+
+bool containsHxTable(const HxTable *table, const char *key)
 {
 	assert(table != NULL);
 	assert(key != NULL);
@@ -277,17 +331,19 @@ void eraseHxTable(HxTable *table, const char *key)
 	table->count -= 1;
 }
 
-size_t hashHxTable(const char *str)
+size_t hashStringHxTable(const char *str)
 {
 	assert(str != NULL);
 
+	const size_t p = 97;
+	const size_t m = 1000000009;
 	size_t hash = 0;
 	size_t pop = 1;
 
 	while (*str)
 	{
-		hash = (hash + (*str - 'a' + 1) * pop) % HIRZEL_UTIL_TABLE_HASH_M;
-		pop = (pop * HIRZEL_UTIL_TABLE_HASH_P) % HIRZEL_UTIL_TABLE_HASH_M;
+		hash = (hash + (*str - 'a' + 1) * pop) % m;
+		pop = (pop * p) % m;
 		str += 1;
 	}
 
@@ -309,13 +365,15 @@ void clearHxTable(HxTable *table)
 
 	for (size_t i = 0; i < size; ++i)
 	{
-		table->data[i].key = NULL;
+		HxTableNode *node = table->data + i;
+
+		clearHxTableNode(node);
 	}
 
 	table->count = 0;
 }
 
-size_t sizeHxTable(HxTable *table)
+size_t sizeHxTable(const HxTable *table)
 {
 	assert(table != NULL);
 
@@ -326,25 +384,15 @@ bool shrinkHxTable(HxTable *table)
 {
 	assert(table != NULL);
 
-	size_t new_size_index = 0;
-	
-	for (size_t i = 0; i < table->size_index; ++i)
-	{
-		size_t new_size = HxTable_sizes[i];
-		bool would_be_less_than_half_full = (new_size / table->count) > 1;
+	size_t new_size_index = getMinSizeIndexHxTable(table->count);
 
-		if (would_be_less_than_half_full)
-		{
-			new_size_index = i;
-			break;
-		}
-	}
+	if (new_size_index >= table->size_index)
+		return true;
 
 	bool is_resized = resizeHxTable(table, new_size_index);
 
 	return is_resized;
 }
-
 
 bool swapHxTable(HxTable *table, void *tmp, const char *key_a, const char *key_b)
 {

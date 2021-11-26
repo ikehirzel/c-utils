@@ -7,20 +7,7 @@ int runTest(const char *name)
 	int return_value = system(name);
 
 	if (return_value == -1)
-	{
-		printf("failed to run test: %s\n", name);
-	}
-	else
-	{
-		if (return_value)
-		{
-			printf("test failed: %s\n", name);
-		}
-		else
-		{
-			printf("test succeeded: %s\n", name);
-		}
-	}
+		printf("Failed to run test: %s\n", name);
 
 	return return_value;
 }
@@ -29,7 +16,8 @@ int main()
 {
 	const char *tests[] =
 	{
-		"./test_array"
+		"./test_array",
+		"./test_table"
 	};
 	
 	size_t test_count = sizeof(tests) / sizeof(tests[0]);
@@ -39,11 +27,12 @@ int main()
 	{
 		if (runTest(tests[i]))
 			fail_count += 1;
+		putchar('\n');
 	}
 
 	
 	if (!fail_count)
-		puts("all tests succeeded");
+		puts("All tests succeeded");
 	else
 		printf("%d tests succeeded", fail_count);
 

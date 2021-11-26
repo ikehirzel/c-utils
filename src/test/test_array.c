@@ -551,7 +551,7 @@ void testIsEmpty()
 
 int main(void)
 {
-	puts("Testing HxArray:");
+	puts("Testing HxArray...");
 
 	testCreate();
 	testIncrement();
