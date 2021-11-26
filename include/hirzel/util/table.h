@@ -32,7 +32,7 @@ extern void destroyHxTable(HxTable *table);
 extern bool resizeHxTable(HxTable *table, size_t new_size_index);
 extern bool reserveHxTable(HxTable * table, size_t min_count);
 extern bool shrinkHxTable(HxTable *table);
-extern bool setHxTable(HxTable *table, const char* key, void *value);
+extern bool setHxTable(HxTable *table, const char* key, const void *value);
 extern void eraseHxTable(HxTable *table, const char *key);
 extern void clearHxTable(HxTable *table);
 extern bool swapHxTable(HxTable *table, void *tmp, const char *a, const char *b);
@@ -239,7 +239,7 @@ bool reserveHxTable(HxTable *table, size_t min_count)
 	return is_resized;
 }
 
-bool setHxTable(HxTable *table, const char* key, void *value)
+bool setHxTable(HxTable *table, const char* key, const void *value)
 {
 	assert(table != NULL);
 	assert(key != NULL);

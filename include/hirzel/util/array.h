@@ -27,13 +27,15 @@ extern void popHxArray(HxArray *array);
 extern void popFrontHxArray(HxArray *array);
 extern void eraseHxArray(HxArray *array, size_t pos);
 extern void setHxArray(HxArray *array, size_t pos, const void *item);
-extern void getHxArray(HxArray *array, void *out, size_t pos);
-extern void *atHxArray(HxArray *array, size_t i);
-extern void *frontHxArray(HxArray *array);
-extern void *backHxArray(HxArray *array);
 extern void swapHxArray(HxArray *array, void *tmp, size_t a, size_t b);
 extern void clearHxArray(HxArray *array);
-extern bool isEmptyHxArray(HxArray *array);
+
+extern void getHxArray(const HxArray *array, void *out, size_t pos);
+extern void *atHxArray(const HxArray *array, size_t i);
+extern void *frontHxArray(const HxArray *array);
+extern void *backHxArray(const HxArray *array);
+extern bool isEmptyHxArray(const HxArray *array);
+extern size_t lengthHxArray(const HxArray *array);
 
 #endif
 
@@ -243,7 +245,7 @@ void eraseHxArray(HxArray *array, size_t pos)
 	array->length -= 1;
 }
 
-void getHxArray(HxArray *array, void *out, size_t pos)
+void getHxArray(const HxArray *array, void *out, size_t pos)
 {
 	assert(array != NULL);
 	assert(out != NULL);
@@ -254,7 +256,7 @@ void getHxArray(HxArray *array, void *out, size_t pos)
 	memcpy(out, src, array->element_size);
 }
 
-void *atHxArray(HxArray *array, size_t pos)
+void *atHxArray(const HxArray *array, size_t pos)
 {
 	assert(array != NULL);
 	assert(pos < array->length);
@@ -287,7 +289,7 @@ void swapHxArray(HxArray *array, void *tmp, size_t pos_a, size_t pos_b)
 	memcpy(b_ptr, tmp, array->element_size);
 }
 
-void *frontHxArray(HxArray *array)
+void *frontHxArray(const HxArray *array)
 {
 	assert(array != NULL);
 	assert(array->length > 0);
@@ -295,7 +297,7 @@ void *frontHxArray(HxArray *array)
 	return array->data;
 }
 
-void *backHxArray(HxArray *array)
+void *backHxArray(const HxArray *array)
 {
 	assert(array != NULL);
 	assert(array->length > 0);
@@ -310,11 +312,18 @@ void clearHxArray(HxArray *array)
 	array->length = 0;
 }
 
-bool isEmptyHxArray(HxArray *array)
+bool isEmptyHxArray(const HxArray *array)
 {
 	assert(array != NULL);
 
 	return array->length == 0;
+}
+
+size_t lengthHxArray(const HxArray *array)
+{
+	assert(array != NULL);
+
+	return array->length;
 }
 
 #endif
