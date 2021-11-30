@@ -26,7 +26,7 @@ void testCreate()
 {
 	puts("\tTesting createHxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 
 	assert(table != NULL);
 	assert(table->data != NULL);
@@ -43,12 +43,12 @@ void testResize()
 {
 	puts("\tTesting resizeHxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	size_t size = HxTable_sizes[0];
-	HxTableNode *front = table->data;
-	HxTableNode *back = table->data + size - 1;
+	struct HxTableNode *front = table->data;
+	struct HxTableNode *back = table->data + size - 1;
 	assert_node(front);
 	assert_node(back);
 
@@ -79,13 +79,13 @@ void testResize()
 void testReserve()
 {
 	puts("\tTesting reserveHxTable()");
-	HxTable *table = createHxTableOf(bool);
+	HxTable table = createHxTableOf(bool);
 	assert(table != NULL);
 
 	reserveHxTable(table, 10);
 	size_t size = HxTable_sizes[table->size_index];
-	HxTableNode *front = table->data;
-	HxTableNode *back = front + size - 1;
+	struct HxTableNode *front = table->data;
+	struct HxTableNode *back = front + size - 1;
 	assert(size > 10 * 2);
 	assert_node(front);
 	assert_node(back);
@@ -105,7 +105,7 @@ void testShrink()
 {
 	puts("\tTesting shrinkHxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	resizeHxTable(table, 3);
@@ -123,7 +123,7 @@ void testShrink()
 void testSet()
 {
 	puts("\tTesting setHxTable()");
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
@@ -141,7 +141,7 @@ void testSet()
 		const char *search_key = valid_keys[key_index];
 		for (size_t node_index = 0; node_index < table_size; ++node_index)
 		{
-			HxTableNode *node = table->data + node_index;
+			struct HxTableNode *node = table->data + node_index;
 
 			if (node->key && !strcmp(node->key, search_key))
 			{
@@ -161,7 +161,7 @@ void testSet()
 void testErase()
 {
 	puts("\tTesting eraseHxTable()");
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -184,7 +184,7 @@ void testErase()
 
 	for (size_t i = 0; i < size; ++i)
 	{
-		const HxTableNode* node = table->data + i;
+		const struct HxTableNode *node = table->data + i;
 		assert(node->key == NULL);
 		assert(node->value == NULL);
 		if (node->deleted)
@@ -199,7 +199,7 @@ void testErase()
 void testClear()
 {
 	puts("\tTesting clearHxTable()");
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
@@ -213,7 +213,7 @@ void testClear()
 
 	for (size_t i = 0; i < HxTable_sizes[table->size_index]; ++i)
 	{
-		HxTableNode *node = table->data + i;
+		struct HxTableNode *node = table->data + i;
 
 		assert(node->key == NULL);
 		assert(node->value == NULL);
@@ -228,7 +228,7 @@ void testSwap()
 {
 	puts("\tTesting swapHxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -253,7 +253,7 @@ void testSwap()
 
 		for (size_t i = 0; i < HxTable_sizes[table->size_index]; ++i)
 		{
-			HxTableNode *node = table->data + i;
+			struct HxTableNode *node = table->data + i;
 
 			if (node->key && !strcmp(node->key, key))
 			{
@@ -271,7 +271,7 @@ void testSwap()
 void testGet()
 {
 	puts("\tTesting getHxTable()");
-	HxTable *table = createHxTableOf(double);
+	HxTable table = createHxTableOf(double);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -301,7 +301,7 @@ void testGet()
 void testAt()
 {
 	puts("\tTesting atHxTable()");
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -326,7 +326,7 @@ void testContains()
 {
 	puts("\tTesting HxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -355,7 +355,7 @@ void testSize()
 {
 	puts("\tTesting sizeHxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < HxTable_size_count; ++i)
@@ -373,7 +373,7 @@ void testIsEmpty()
 {
 	puts("\tTesting isEmptyHxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable table = createHxTableOf(int);
 	assert(table != NULL);
 
 	assert(isEmptyHxTable(table));
