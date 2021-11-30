@@ -1,6 +1,6 @@
-#ifndef HIRZEL_UTIL_FILE_H
-#define HIRZEL_UTIL_FILE_H
-#include <stdio.h>
+#ifndef HIRZEL_FILE_H
+#define HIRZEL_FILE_H
+
 #include <stdbool.h>
 
 /**

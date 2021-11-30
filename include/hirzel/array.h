@@ -1,10 +1,8 @@
-#ifndef HIRZEL_UTIL_ARRAY_H
-#define HIRZEL_UTIL_ARRAY_H
+#ifndef HIRZEL_ARRAY_H
+#define HIRZEL_ARRAY_H
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct HxArray
 {
@@ -43,6 +41,8 @@ extern size_t lengthHxArray(const HxArray *array);
 #define HIRZEL_UTIL_ARRAY_I
 
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 HxArray *createHxArray(size_t element_size)
 {

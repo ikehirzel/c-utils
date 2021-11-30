@@ -1,5 +1,5 @@
 #define HIRZEL_IMPLEMENT
-#include <hirzel/util/table.h>
+#include <hirzel/table.h>
 
 // standard library
 #include <assert.h>

@@ -1,5 +1,5 @@
 #define HIRZEL_IMPLEMENT
-#include <hirzel/util/array.h>
+#include <hirzel/array.h>
 
 // standard library
 #include <stdio.h>

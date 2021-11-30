@@ -1,5 +1,5 @@
-#ifndef HIRZEL_UTIL_TABLE_H
-#define HIRZEL_UTIL_TABLE_H
+#ifndef HIRZEL_TABLE_H
+#define HIRZEL_TABLE_H
 
 #include <stddef.h>
 #include <stdbool.h>
