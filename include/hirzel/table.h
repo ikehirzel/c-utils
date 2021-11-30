@@ -4,26 +4,26 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef struct HxTable *HxTable;
+typedef struct HxTable HxTable;
 
 extern size_t hashStringHxTable(const char *str);
 
-extern HxTable createHxTable(size_t element_size);
 #define createHxTableOf(type) createHxTable(sizeof(type))
-extern void destroyHxTable(HxTable table);
-extern bool resizeHxTable(HxTable table, size_t new_size_index);
-extern bool reserveHxTable(HxTable table, size_t min_count);
-extern bool shrinkHxTable(HxTable table);
-extern bool setHxTable(HxTable table, const char* key, const void *value);
-extern void eraseHxTable(HxTable table, const char *key);
-extern void clearHxTable(HxTable table);
-extern bool swapHxTable(HxTable table, void *tmp, const char *a, const char *b);
+extern HxTable *createHxTable(size_t element_size);
+extern void destroyHxTable(HxTable *table);
+extern bool resizeHxTable(HxTable *table, size_t new_size_index);
+extern bool reserveHxTable(HxTable *table, size_t min_count);
+extern bool shrinkHxTable(HxTable *table);
+extern bool setHxTable(HxTable *table, const char* key, const void *value);
+extern void eraseHxTable(HxTable *table, const char *key);
+extern void clearHxTable(HxTable *table);
+extern bool swapHxTable(HxTable *table, void *tmp, const char *a, const char *b);
 
-extern bool getHxTable(const HxTable table, void *out, const char *key);
-extern void *atHxTable(const HxTable table, const char *key);
-extern bool containsHxTable(const HxTable table, const char *key);
-extern size_t sizeHxTable(const HxTable table);
-extern bool isEmptyHxTable(const HxTable table);
+extern bool getHxTable(const HxTable *table, void *out, const char *key);
+extern void *atHxTable(const HxTable *table, const char *key);
+extern bool containsHxTable(const HxTable *table, const char *key);
+extern size_t sizeHxTable(const HxTable *table);
+extern bool isEmptyHxTable(const HxTable *table);
 
 #endif
 
@@ -75,7 +75,7 @@ static size_t getMinSizeIndexHxTable(size_t count)
 	return size_index;
 }
 
-static bool initHxTableNode(struct HxTableNode *out, const HxTable table, const char *key, const void *value)
+static bool initHxTableNode(struct HxTableNode *out, const HxTable *table, const char *key, const void *value)
 {
 	assert(table != NULL);
 	assert(out != NULL);
@@ -122,7 +122,7 @@ static void clearHxTableNode(struct HxTableNode *node)
 	node->deleted = false;
 }
 
-struct HxTableNode *findNodeHxTable(const HxTable table, const char *key)
+struct HxTableNode *findNodeHxTable(const HxTable *table, const char *key)
 {
 	assert(table != NULL);
 	assert(key != NULL);
@@ -150,11 +150,11 @@ struct HxTableNode *findNodeHxTable(const HxTable table, const char *key)
 	return out;
 }
 
-HxTable createHxTable(size_t element_size)
+HxTable *createHxTable(size_t element_size)
 {
 	assert(element_size > 0);
 
-	struct HxTable *table = malloc(sizeof(struct HxTable));
+	HxTable *table = malloc(sizeof(HxTable));
 	void *data = calloc(HxTable_sizes[0], sizeof(struct HxTableNode));
 
 	if (!table || !data)
@@ -165,7 +165,7 @@ HxTable createHxTable(size_t element_size)
 		return NULL;
 	}
 
-	*table = (struct HxTable) {
+	*table = (HxTable) {
 		.data = data,
 		.hash_function = hashStringHxTable,
 		.size_index = 0,
@@ -176,7 +176,7 @@ HxTable createHxTable(size_t element_size)
 	return table;
 }
 
-void destroyHxTable(HxTable table)
+void destroyHxTable(HxTable *table)
 {
 	assert(table != NULL);
 
@@ -193,7 +193,7 @@ void destroyHxTable(HxTable table)
 	free(table);
 }
 
-bool resizeHxTable(HxTable table, size_t new_size_index)
+bool resizeHxTable(HxTable *table, size_t new_size_index)
 {
 	assert(table != NULL);
 	assert(new_size_index < HxTable_size_count);
@@ -229,7 +229,7 @@ bool resizeHxTable(HxTable table, size_t new_size_index)
 	return true;
 }
 
-bool reserveHxTable(HxTable table, size_t min_count)
+bool reserveHxTable(HxTable *table, size_t min_count)
 {
 	assert(table != NULL);
 	
@@ -239,7 +239,7 @@ bool reserveHxTable(HxTable table, size_t min_count)
 	return is_resized;
 }
 
-bool setHxTable(HxTable table, const char* key, const void *value)
+bool setHxTable(HxTable *table, const char* key, const void *value)
 {
 	assert(table != NULL);
 	assert(key != NULL);
@@ -276,7 +276,7 @@ bool setHxTable(HxTable table, const char* key, const void *value)
 	return true;
 }
 
-bool getHxTable(const HxTable table, void *out, const char *key)
+bool getHxTable(const HxTable *table, void *out, const char *key)
 {
 	assert(table != NULL);
 	assert(out != NULL);
@@ -292,7 +292,7 @@ bool getHxTable(const HxTable table, void *out, const char *key)
 	return true;
 }
 
-void *atHxTable(const HxTable table, const char *key)
+void *atHxTable(const HxTable *table, const char *key)
 {
 	assert(table != NULL);
 	assert(key != NULL);
@@ -306,7 +306,7 @@ void *atHxTable(const HxTable table, const char *key)
 	return out;
 }
 
-bool containsHxTable(const HxTable table, const char *key)
+bool containsHxTable(const HxTable *table, const char *key)
 {
 	assert(table != NULL);
 	assert(key != NULL);
@@ -317,7 +317,7 @@ bool containsHxTable(const HxTable table, const char *key)
 	return contains_key;
 }
 
-void eraseHxTable(HxTable table, const char *key)
+void eraseHxTable(HxTable *table, const char *key)
 {
 	assert(table != NULL);
 	assert(key != NULL);
@@ -350,14 +350,14 @@ size_t hashStringHxTable(const char *str)
 	return hash;
 }
 
-bool isEmptyHxTable(const HxTable table)
+bool isEmptyHxTable(const HxTable *table)
 {
 	assert(table != NULL);
 
 	return table->count == 0;
 }
 
-void clearHxTable(HxTable table)
+void clearHxTable(HxTable *table)
 {
 	assert(table != NULL);
 	
@@ -373,14 +373,14 @@ void clearHxTable(HxTable table)
 	table->count = 0;
 }
 
-size_t sizeHxTable(const HxTable table)
+size_t sizeHxTable(const HxTable *table)
 {
 	assert(table != NULL);
 
 	return HxTable_sizes[table->size_index];
 }
 
-bool shrinkHxTable(HxTable table)
+bool shrinkHxTable(HxTable *table)
 {
 	assert(table != NULL);
 
@@ -394,7 +394,7 @@ bool shrinkHxTable(HxTable table)
 	return is_resized;
 }
 
-bool swapHxTable(HxTable table, void *tmp, const char *key_a, const char *key_b)
+bool swapHxTable(HxTable *table, void *tmp, const char *key_a, const char *key_b)
 {
 	assert(table != NULL);
 	assert(tmp != NULL);

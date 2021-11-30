@@ -9,7 +9,7 @@ void testCreate()
 {
 	puts("\tTesting createHxArray()");
 
-	HxArray array = createHxArray(sizeof(int));
+	HxArray *array = createHxArray(sizeof(int));
 	assert(array != NULL);
 	assert(array->data == NULL);
 	assert(array->element_size == sizeof(int));
@@ -29,7 +29,7 @@ void testCreate()
 void testReserve()
 {
 	puts("\tTesting reserveHxArray()");
-	HxArray arr = createHxArray(sizeof(int));
+	HxArray *arr = createHxArray(sizeof(int));
 	assert(arr != NULL);
 
 	assert(reserveHxArray(arr, 2));
@@ -64,7 +64,7 @@ void testReserve()
 void testResize()
 {
 	puts("\tTesting resizeHxArray()");
-	HxArray arr = createHxArray(sizeof(int));
+	HxArray *arr = createHxArray(sizeof(int));
 	assert(arr != NULL);
 	
 	assert(resizeHxArray(arr, 2));
@@ -100,7 +100,7 @@ void testIncrement()
 {
 	puts("\tTesting incrementHxArray()");
 
-	HxArray arr = createHxArray(sizeof(float));
+	HxArray *arr = createHxArray(sizeof(float));
 	assert(arr != NULL);
 
 	for (size_t i = 0; i < 10; ++i)
@@ -120,7 +120,7 @@ void testPush()
 {
 	puts("\tTesting pushHxArray()");
 
-	HxArray arr = createHxArray(sizeof(int));
+	HxArray *arr = createHxArray(sizeof(int));
 	assert(arr != NULL);	
 
 	int value = 3;
@@ -147,7 +147,7 @@ void testPushFront()
 {
 	puts("\tTesting pushFrontHxArray()");
 
-	HxArray arr = createHxArray(sizeof(float));
+	HxArray *arr = createHxArray(sizeof(float));
 	assert(arr != NULL);
 	reserveHxArray(arr, 1);
 
@@ -183,7 +183,7 @@ void testInsert()
 {
 	puts("\tTesting insertHxArray()");
 
-	HxArray arr = createHxArray(sizeof(double));
+	HxArray *arr = createHxArray(sizeof(double));
 	assert(arr != NULL);
 
 	double value = 3.2;
@@ -231,7 +231,7 @@ void testPop()
 {
 	puts("\tTesting popHxArray()");
 
-	HxArray arr = createHxArray(sizeof(char));
+	HxArray *arr = createHxArray(sizeof(char));
 	assert(arr != NULL);
 	resizeHxArray(arr, 3);
 
@@ -258,7 +258,7 @@ void testPopFront()
 {
 	puts("\tTesting popFrontHxArray()");
 
-	HxArray arr = createHxArray(sizeof(char));
+	HxArray *arr = createHxArray(sizeof(char));
 	assert(arr != NULL);
 	resizeHxArray(arr, 3);
 
@@ -288,7 +288,7 @@ void testErase()
 {
 	puts("\tTesting eraseHxArray()");
 
-	HxArray arr = createHxArray(sizeof(char));
+	HxArray *arr = createHxArray(sizeof(char));
 	assert(arr != NULL);
 	resizeHxArray(arr, 3);
 
@@ -323,7 +323,7 @@ void testSet()
 	int b = 1;
 	int c = 2;
 
-	HxArray arr = createHxArray(sizeof(int*));
+	HxArray *arr = createHxArray(sizeof(int*));
 	assert(arr != NULL);
 	resizeHxArray(arr, 3);
 
@@ -356,7 +356,7 @@ void testGet()
 {
 	puts("\tTesting getHxArray()");
 
-	HxArray arr = createHxArray(sizeof(unsigned long long));
+	HxArray *arr = createHxArray(sizeof(unsigned long long));
 	assert(arr != NULL);
 	resizeHxArray(arr, 3);
 
@@ -382,7 +382,7 @@ void testAt()
 {
 	puts("\tTesting atHxArray()");
 
-	HxArray arr = createHxArray(sizeof(unsigned long long));
+	HxArray *arr = createHxArray(sizeof(unsigned long long));
 	resizeHxArray(arr, 3);
 
 	unsigned long long *data = arr->data;
@@ -407,7 +407,7 @@ void testFront()
 {
 	puts("\tTesting frontHxArray()");
 
-	HxArray arr = createHxArray(sizeof(char));
+	HxArray *arr = createHxArray(sizeof(char));
 	resizeHxArray(arr, 3);
 
 	char *data = arr->data;
@@ -442,7 +442,7 @@ void testBack()
 {
 	puts("\tTesting backHxArray()");
 
-	HxArray arr = createHxArray(sizeof(char));
+	HxArray *arr = createHxArray(sizeof(char));
 	resizeHxArray(arr, 3);
 
 	char *data = arr->data;
@@ -477,7 +477,7 @@ void testSwap()
 {
 	puts("\tTesting swapHxArray()");
 
-	HxArray arr = createHxArray(sizeof(char));
+	HxArray *arr = createHxArray(sizeof(char));
 	resizeHxArray(arr, 3);
 
 	char *data = arr->data;
@@ -508,7 +508,7 @@ void testClear()
 {
 	puts("\tTesting clearHxArray()");
 
-	HxArray arr = createHxArray(sizeof(int));
+	HxArray *arr = createHxArray(sizeof(int));
 
 	resizeHxArray(arr, 3);
 	assert(arr->length == 3);
@@ -529,7 +529,7 @@ void testIsEmpty()
 {
 	puts("\tTesting isEmptyHxArray()");
 
-	HxArray arr = createHxArray(sizeof(bool));
+	HxArray *arr = createHxArray(sizeof(bool));
 	resizeHxArray(arr, 3);
 
 	assert(!isEmptyHxArray(arr));
