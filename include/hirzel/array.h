@@ -28,6 +28,7 @@ extern void *hxarray_front(const HxArray *array);
 extern void *back(const HxArray *array);
 extern bool hxarray_is_empty(const HxArray *array);
 extern size_t hxarray_length(const HxArray *array);
+extern size_t hxarray_capacity(const HxArray *array);
 
 #endif
 
@@ -324,6 +325,13 @@ size_t hxarray_length(const HxArray *array)
 	assert(array != NULL);
 
 	return array->length;
+}
+
+size_t hxarray_capacity(const HxArray *array)
+{
+	assert(array != NULL);
+
+	return array->capacity;
 }
 
 #endif
