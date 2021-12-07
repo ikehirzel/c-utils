@@ -25,7 +25,7 @@ extern void hxarray_clear(HxArray *array);
 extern void hxarray_get(const HxArray *array, void *out, size_t pos);
 extern void *hxarray_at(const HxArray *array, size_t i);
 extern void *hxarray_front(const HxArray *array);
-extern void *back(const HxArray *array);
+extern void *hxarray_back(const HxArray *array);
 extern bool hxarray_is_empty(const HxArray *array);
 extern size_t hxarray_length(const HxArray *array);
 extern size_t hxarray_capacity(const HxArray *array);
