@@ -24,9 +24,9 @@ const size_t invalid_key_count = sizeof(invalid_keys) / sizeof(*invalid_keys);
 
 void testCreate()
 {
-	puts("\tTesting createHxTable()");
+	puts("\tTesting hxtable_create()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 
 	assert(table != NULL);
 	assert(table->data != NULL);
@@ -34,107 +34,107 @@ void testCreate()
 	assert(table->count == 0);
 	assert(table->size_index == 0);
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 #define assert_node(name) assert(#name " is valid" && name->key == NULL && name->value == NULL && name->deleted == false)
 
 void testResize()
 {
-	puts("\tTesting resizeHxTable()");
+	puts("\tTesting hxtable_resize()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
-	size_t size = HxTable_sizes[0];
+	size_t size = hxtable_sizes[0];
 	struct HxTableNode *front = table->data;
 	struct HxTableNode *back = table->data + size - 1;
 	assert_node(front);
 	assert_node(back);
 
-	resizeHxTable(table, 1);
+	hxtable_resize(table, 1);
 	assert(table->size_index == 1);
-	size = HxTable_sizes[1];
+	size = hxtable_sizes[1];
 	front = table->data;
 	back = table->data + size - 1;
 	assert_node(front);
 	assert_node(back);
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 
-	table = createHxTable(35);
+	table = hxtable_create(35);
 	assert(table != NULL);
 
-	resizeHxTable(table, 3);
+	hxtable_resize(table, 3);
 	assert(table->size_index == 3);
-	size = HxTable_sizes[3];
+	size = hxtable_sizes[3];
 	front = table->data;
 	back = table->data + size - 1;
 	assert_node(front);
 	assert_node(back);
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testReserve()
 {
-	puts("\tTesting reserveHxTable()");
-	HxTable *table = createHxTableOf(bool);
+	puts("\tTesting hxtable_reserve()");
+	HxTable *table = hxtable_create_of(bool);
 	assert(table != NULL);
 
-	reserveHxTable(table, 10);
-	size_t size = HxTable_sizes[table->size_index];
+	hxtable_reserve(table, 10);
+	size_t size = hxtable_sizes[table->size_index];
 	struct HxTableNode *front = table->data;
 	struct HxTableNode *back = front + size - 1;
 	assert(size > 10 * 2);
 	assert_node(front);
 	assert_node(back);
 
-	reserveHxTable(table, 500);
-	size = HxTable_sizes[table->size_index];
+	hxtable_reserve(table, 500);
+	size = hxtable_sizes[table->size_index];
 	front = table->data;
 	back = front + size - 1;
 	assert(size > 500 * 2);
 	assert_node(front);
 	assert_node(back);
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testShrink()
 {
-	puts("\tTesting shrinkHxTable()");
+	puts("\tTesting hxtable_shrink()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
-	resizeHxTable(table, 3);
-	shrinkHxTable(table);
+	hxtable_resize(table, 3);
+	hxtable_shrink(table);
 	assert(table->size_index == 0);
 
-	resizeHxTable(table, 3);
+	hxtable_resize(table, 3);
 	table->count = 10;
-	shrinkHxTable(table);
+	hxtable_shrink(table);
 	assert(table->size_index == 1);
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testSet()
 {
-	puts("\tTesting setHxTable()");
-	HxTable *table = createHxTableOf(int);
+	puts("\tTesting hxtable_set()");
+	HxTable *table = hxtable_create_of(int);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
 		const char *key = valid_keys[i];
 		int value = i * 3;
 
-		assert(setHxTable(table, key, &value));
+		assert(hxtable_set(table, key, &value));
 		assert(table->count == i + 1);
 	}
 
-	size_t table_size = sizeHxTable(table);
+	size_t table_size = hxtable_size(table);
 	for (size_t key_index = 0; key_index < valid_key_count; ++key_index)
 	{
 		bool found = false;
@@ -155,13 +155,13 @@ void testSet()
 		assert(found == true);
 	}
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testErase()
 {
-	puts("\tTesting eraseHxTable()");
-	HxTable *table = createHxTableOf(int);
+	puts("\tTesting hxtable_erase()");
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -169,17 +169,17 @@ void testErase()
 		const char *key = valid_keys[i];
 		int value = i * 8;
 
-		assert(setHxTable(table, key, &value));
+		assert(hxtable_set(table, key, &value));
 	}
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
 		const char *key = valid_keys[i];
 
-		eraseHxTable(table, key);
+		hxtable_erase(table, key);
 	}
 
-	size_t size = HxTable_sizes[table->size_index];
+	size_t size = hxtable_sizes[table->size_index];
 	unsigned deleted_count = 0;
 
 	for (size_t i = 0; i < size; ++i)
@@ -193,25 +193,25 @@ void testErase()
 
 	assert(deleted_count == valid_key_count);
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testClear()
 {
-	puts("\tTesting clearHxTable()");
-	HxTable *table = createHxTableOf(int);
+	puts("\tTesting hxtable_clear()");
+	HxTable *table = hxtable_create_of(int);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
 		const char *key = valid_keys[i];
 		int value = i;
 
-		assert(setHxTable(table, key, &value));
+		assert(hxtable_set(table, key, &value));
 	}
 
-	clearHxTable(table);
+	hxtable_clear(table);
 
-	for (size_t i = 0; i < HxTable_sizes[table->size_index]; ++i)
+	for (size_t i = 0; i < hxtable_sizes[table->size_index]; ++i)
 	{
 		struct HxTableNode *node = table->data + i;
 
@@ -221,14 +221,14 @@ void testClear()
 	}
 
 	assert(table != NULL);
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testSwap()
 {
-	puts("\tTesting swapHxTable()");
+	puts("\tTesting hxtable_swap()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -236,12 +236,12 @@ void testSwap()
 		const char *key = valid_keys[i];
 		int value = i;
 
-		assert(setHxTable(table, key, &value));
+		assert(hxtable_set(table, key, &value));
 	}
 
 	int tmp;
-	swapHxTable(table, &tmp, valid_keys[0], valid_keys[1]);
-	swapHxTable(table, &tmp, valid_keys[1], valid_keys[2]);
+	hxtable_swap(table, &tmp, valid_keys[0], valid_keys[1]);
+	hxtable_swap(table, &tmp, valid_keys[1], valid_keys[2]);
 
 	int expected[] = { 1, 2, 0 };
 	size_t expected_count = sizeof(expected) / sizeof(*expected);
@@ -251,7 +251,7 @@ void testSwap()
 		const char *key = valid_keys[e];
 		int value = expected[e];
 
-		for (size_t i = 0; i < HxTable_sizes[table->size_index]; ++i)
+		for (size_t i = 0; i < hxtable_sizes[table->size_index]; ++i)
 		{
 			struct HxTableNode *node = table->data + i;
 
@@ -265,13 +265,13 @@ void testSwap()
 		}
 	}
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testGet()
 {
-	puts("\tTesting getHxTable()");
-	HxTable *table = createHxTableOf(double);
+	puts("\tTesting hxtable_get()");
+	HxTable *table = hxtable_create_of(double);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -279,9 +279,9 @@ void testGet()
 		const char *key = valid_keys[i];
 		double value = 8.25 * i;
 
-		assert(setHxTable(table, key, &value));
+		assert(hxtable_set(table, key, &value));
 		double retrieved;
-		assert(getHxTable(table, &retrieved, key));
+		assert(hxtable_get(table, &retrieved, key));
 		assert(value == retrieved);
 	}
 
@@ -290,18 +290,18 @@ void testGet()
 		const char *key = valid_keys[i];
 		double retrieved;
 
-		assert(getHxTable(table, &retrieved, key));
+		assert(hxtable_get(table, &retrieved, key));
 		assert(retrieved == 8.25 * i);
 	}
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 
 void testAt()
 {
-	puts("\tTesting atHxTable()");
-	HxTable *table = createHxTableOf(int);
+	puts("\tTesting hxtable_at()");
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
@@ -309,80 +309,80 @@ void testAt()
 		const char *key = valid_keys[i];
 		int value = i;
 
-		assert(setHxTable(table, key, &value));
+		assert(hxtable_set(table, key, &value));
 	}
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
-		int *ptr = atHxTable(table, valid_keys[i]);
+		int *ptr = hxtable_at(table, valid_keys[i]);
 		assert(ptr);
 		assert(*ptr == (int)i);
 	}
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testContains()
 {
 	puts("\tTesting HxTable()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < valid_key_count; ++i)
-		assert(!containsHxTable(table, valid_keys[i]));
+		assert(!hxtable_contains(table, valid_keys[i]));
 
 	for (size_t i = 0; i < invalid_key_count; ++i)
-		assert(!containsHxTable(table, invalid_keys[i]));
+		assert(!hxtable_contains(table, invalid_keys[i]));
 
 	for (size_t i = 0; i < valid_key_count; ++i)
 	{
 		int value = i;
-		assert(setHxTable(table, valid_keys[i], &value));
-		assert(containsHxTable(table, valid_keys[i]));
+		assert(hxtable_set(table, valid_keys[i], &value));
+		assert(hxtable_contains(table, valid_keys[i]));
 	}
 
 	for (size_t i = 0; i < valid_key_count; ++i)
-		assert(containsHxTable(table, valid_keys[i]));
+		assert(hxtable_contains(table, valid_keys[i]));
 
 	for (size_t i = 0; i < invalid_key_count; ++i)
-		assert(!containsHxTable(table, invalid_keys[i]));
+		assert(!hxtable_contains(table, invalid_keys[i]));
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testSize()
 {
-	puts("\tTesting sizeHxTable()");
+	puts("\tTesting hxtable_size()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
 	for (size_t i = 0; i < HxTable_size_count; ++i)
 	{
 		table->size_index = i;
-		assert(sizeHxTable(table) == HxTable_sizes[i]);
+		assert(hxtable_size(table) == hxtable_sizes[i]);
 	}
 
 	table->size_index = 0;
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 void testIsEmpty()
 {
-	puts("\tTesting isEmptyHxTable()");
+	puts("\tTesting hxtable_is_empty()");
 
-	HxTable *table = createHxTableOf(int);
+	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
 
-	assert(isEmptyHxTable(table));
+	assert(hxtable_is_empty(table));
 	table->count = 1;
-	assert(!isEmptyHxTable(table));
+	assert(!hxtable_is_empty(table));
 	table->count = 100;
-	assert(!isEmptyHxTable(table));
+	assert(!hxtable_is_empty(table));
 
-	destroyHxTable(table);
+	hxtable_destroy(table);
 }
 
 int main(void)

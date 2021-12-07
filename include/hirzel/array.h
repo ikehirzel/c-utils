@@ -6,27 +6,28 @@
 
 typedef struct HxArray HxArray;
 
-extern HxArray *createHxArray(size_t element_size);
-extern void destroyHxArray(HxArray *array);
-extern bool reserveHxArray(HxArray *array, size_t new_capacity);
-extern bool resizeHxArray(HxArray *array, size_t new_size);
-extern bool incrementHxArray(HxArray *array);
-extern bool pushHxArray(HxArray *array, const void *item);
-extern bool pushFrontHxArray(HxArray *array, const void *item);
-extern bool insertHxArray(HxArray *array, size_t pos, const void *item);
-extern void popHxArray(HxArray *array);
-extern void popFrontHxArray(HxArray *array);
-extern void eraseHxArray(HxArray *array, size_t pos);
-extern void setHxArray(HxArray *array, size_t pos, const void *item);
-extern void swapHxArray(HxArray *array, void *tmp, size_t a, size_t b);
-extern void clearHxArray(HxArray *array);
+extern HxArray *hxarray_create(size_t element_size);
+#define hxarray_create_of(type) hxarray_create(sizeof(type))
+extern void hxarray_destroy(HxArray *array);
+extern bool hxarray_reserve(HxArray *array, size_t new_capacity);
+extern bool hxarray_resize(HxArray *array, size_t new_size);
+extern bool hxarray_increment_size(HxArray *array);
+extern bool hxarray_push(HxArray *array, const void *item);
+extern bool hxarray_push_front(HxArray *array, const void *item);
+extern bool hxarray_insert(HxArray *array, size_t pos, const void *item);
+extern void hxarray_pop(HxArray *array);
+extern void hxarray_pop_front(HxArray *array);
+extern void hxarray_erase(HxArray *array, size_t pos);
+extern void hxarray_set(HxArray *array, size_t pos, const void *item);
+extern void hxarray_swap(HxArray *array, void *tmp, size_t a, size_t b);
+extern void hxarray_clear(HxArray *array);
 
-extern void getHxArray(const HxArray *array, void *out, size_t pos);
-extern void *atHxArray(const HxArray *array, size_t i);
-extern void *frontHxArray(const HxArray *array);
-extern void *backHxArray(const HxArray *array);
-extern bool isEmptyHxArray(const HxArray *array);
-extern size_t lengthHxArray(const HxArray *array);
+extern void hxarray_get(const HxArray *array, void *out, size_t pos);
+extern void *hxarray_at(const HxArray *array, size_t i);
+extern void *hxarray_front(const HxArray *array);
+extern void *back(const HxArray *array);
+extern bool hxarray_is_empty(const HxArray *array);
+extern size_t hxarray_length(const HxArray *array);
 
 #endif
 
@@ -44,7 +45,7 @@ struct HxArray {
 	size_t length;
 };
 
-HxArray *createHxArray(size_t element_size)
+HxArray *hxarray_create(size_t element_size)
 {
 	assert(element_size > 0);
 
@@ -53,17 +54,16 @@ HxArray *createHxArray(size_t element_size)
 	if (!out)
 		return NULL;
 
-	*out = (HxArray) {
-		.data = NULL,
-		.element_size = element_size,
-		.length = 0,
-		.capacity = 0
-	};
-
+	// setting default values for array
+	out->data = NULL;
+	out->element_size = element_size;
+	out->length = 0;
+	out->capacity = 0;
+	
 	return out;
 }
 
-void destroyHxArray(HxArray *array)
+void hxarray_destroy(HxArray *array)
 {
 	assert(array != NULL);
 
@@ -71,7 +71,7 @@ void destroyHxArray(HxArray *array)
 	free(array);
 }
 
-bool reserveHxArray(HxArray *array, size_t capacity)
+bool hxarray_reserve(HxArray *array, size_t capacity)
 {
 	assert(array != NULL);
 
@@ -93,7 +93,7 @@ bool reserveHxArray(HxArray *array, size_t capacity)
 	return true;
 }
 
-bool resizeHxArray(HxArray *array, size_t new_length)
+bool hxarray_resize(HxArray *array, size_t new_length)
 {
 	assert(array != NULL);
 
@@ -120,7 +120,7 @@ bool resizeHxArray(HxArray *array, size_t new_length)
 	return true;	
 }
 
-bool incrementHxArray(HxArray *array)
+bool hxarray_increment_size(HxArray *array)
 {
 	assert(array != NULL);
 
@@ -141,12 +141,12 @@ bool incrementHxArray(HxArray *array)
 	return true;
 }
 
-bool pushHxArray(HxArray *array, const void *item)
+bool hxarray_push(HxArray *array, const void *item)
 {
 	assert(array != NULL);
 	assert(item != NULL);
 
-	if (!incrementHxArray(array))
+	if (!hxarray_increment_size(array))
 		return false;
 
 	char *dest = (char*)array->data + (array->length - 1) * array->element_size;
@@ -156,12 +156,12 @@ bool pushHxArray(HxArray *array, const void *item)
 	return true;
 }
 
-bool pushFrontHxArray(HxArray *array, const void *item)
+bool hxarray_push_front(HxArray *array, const void *item)
 {
 	assert(array != NULL);
 	assert(item != NULL);
 
-	if (!incrementHxArray(array))
+	if (!hxarray_increment_size(array))
 		return false;
 
 	for (size_t i = array->length - 1; i >= 1; --i)
@@ -177,13 +177,13 @@ bool pushFrontHxArray(HxArray *array, const void *item)
 	return true;
 }
 
-bool insertHxArray(HxArray *array, size_t pos, const void *item)
+bool hxarray_insert(HxArray *array, size_t pos, const void *item)
 {
 	assert(array != NULL);
 	assert(pos <= array->length);
 	assert(item != NULL);
 
-	if (!incrementHxArray(array))
+	if (!hxarray_increment_size(array))
 		return false;
 
 	for (size_t i = array->length; i > pos; --i)
@@ -201,7 +201,7 @@ bool insertHxArray(HxArray *array, size_t pos, const void *item)
 	return true;
 }
 
-void popHxArray(HxArray *array)
+void hxarray_pop(HxArray *array)
 {
 	assert(array != NULL);
 
@@ -211,7 +211,7 @@ void popHxArray(HxArray *array)
 	array->length -= 1;
 }
 
-void popFrontHxArray(HxArray *array)
+void hxarray_pop_front(HxArray *array)
 {
 	assert(array != NULL);
 
@@ -229,7 +229,7 @@ void popFrontHxArray(HxArray *array)
 	}
 }
 
-void eraseHxArray(HxArray *array, size_t pos)
+void hxarray_erase(HxArray *array, size_t pos)
 {
 	assert(array != NULL);
 	assert(pos < array->length);
@@ -245,7 +245,7 @@ void eraseHxArray(HxArray *array, size_t pos)
 	array->length -= 1;
 }
 
-void getHxArray(const HxArray *array, void *out, size_t pos)
+void hxarray_get(const HxArray *array, void *out, size_t pos)
 {
 	assert(array != NULL);
 	assert(out != NULL);
@@ -256,7 +256,7 @@ void getHxArray(const HxArray *array, void *out, size_t pos)
 	memcpy(out, src, array->element_size);
 }
 
-void *atHxArray(const HxArray *array, size_t pos)
+void *hxarray_at(const HxArray *array, size_t pos)
 {
 	assert(array != NULL);
 	assert(pos < array->length);
@@ -264,7 +264,7 @@ void *atHxArray(const HxArray *array, size_t pos)
 	return (char*)array->data + pos * array->element_size;
 }
 
-void setHxArray(HxArray *array, size_t pos, const void *item)
+void hxarray_set(HxArray *array, size_t pos, const void *item)
 {
 	assert(array != NULL);
 	assert(pos < array->length);
@@ -274,7 +274,7 @@ void setHxArray(HxArray *array, size_t pos, const void *item)
 	memcpy(dest, item, array->element_size);
 }
 
-void swapHxArray(HxArray *array, void *tmp, size_t pos_a, size_t pos_b)
+void hxarray_swap(HxArray *array, void *tmp, size_t pos_a, size_t pos_b)
 {
 	assert(array != NULL);
 	assert(tmp != NULL);
@@ -289,7 +289,7 @@ void swapHxArray(HxArray *array, void *tmp, size_t pos_a, size_t pos_b)
 	memcpy(b_ptr, tmp, array->element_size);
 }
 
-void *frontHxArray(const HxArray *array)
+void *hxarray_front(const HxArray *array)
 {
 	assert(array != NULL);
 	assert(array->length > 0);
@@ -297,7 +297,7 @@ void *frontHxArray(const HxArray *array)
 	return array->data;
 }
 
-void *backHxArray(const HxArray *array)
+void *hxarray_back(const HxArray *array)
 {
 	assert(array != NULL);
 	assert(array->length > 0);
@@ -305,21 +305,21 @@ void *backHxArray(const HxArray *array)
 	return (char*)array->data + (array->length - 1) * array->element_size;
 }
 
-void clearHxArray(HxArray *array)
+void hxarray_clear(HxArray *array)
 {
 	assert(array != NULL);
 
 	array->length = 0;
 }
 
-bool isEmptyHxArray(const HxArray *array)
+bool hxarray_is_empty(const HxArray *array)
 {
 	assert(array != NULL);
 
 	return array->length == 0;
 }
 
-size_t lengthHxArray(const HxArray *array)
+size_t hxarray_length(const HxArray *array)
 {
 	assert(array != NULL);
 
