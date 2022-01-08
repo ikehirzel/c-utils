@@ -1,575 +1,506 @@
-#define HIRZEL_IMPLEMENT
 #include <hirzel/array.h>
+
+HXARRAY_DECLARE(int, IntArray)
+HXARRAY_DEFINE(int, IntArray)
 
 // standard library
 #include <stdio.h>
 #include <assert.h>
 
-void test_hxarray_create()
+void test_IntArray_create()
 {
-	puts("\tTesting create()");
+	puts("\tTesting IntArray_create()");
 
-	HxArray *array = hxarray_create_of(int);
-	assert(array != NULL);
-	assert(array->data == NULL);
-	assert(array->element_size == sizeof(int));
-	assert(array->length == 0);
-	assert(array->capacity == 0);
-	hxarray_destroy(array);
+	IntArray arr = IntArray_init();
 
-	array = hxarray_create_of(double);
-	assert(array != NULL);
-	assert(array->data == NULL);
-	assert(array->element_size == sizeof(double));
-	assert(array->length == 0);
-	assert(array->capacity == 0);
-	hxarray_destroy(array);
+	assert(arr.buffer == NULL);
+	assert(arr.length == 0);
+	assert(arr.capacity == 0);
 }
 
-void test_hxarray_reserve()
+void test_IntArray_reserve()
 {
-	puts("\tTesting hxarray_reserve()");
-	HxArray *arr = hxarray_create_of(int);
-	assert(arr != NULL);
+	puts("\tTesting IntArray_reserve()");
+	IntArray arr = IntArray_init();
 
-	assert(hxarray_reserve(arr, 2));
-	assert(arr->length == 0);
-	assert(arr->data != NULL);
-	assert(arr->capacity == 2);
-	assert(arr->element_size == sizeof(int));
+	assert(IntArray_reserve(&arr, 2));
+	assert(arr.length == 0);
+	assert(arr.buffer != NULL);
+	assert(arr.capacity == 2);
 
-	int *data = arr->data;
-	data[0] = 7;
-	data[1] = 5;
-	assert(data[0] == 7);
-	assert(data[1] == 5);
+	arr.buffer[0] = 7;
+	arr.buffer[1] = 5;
+	assert(arr.buffer[0] == 7);
+	assert(arr.buffer[1] == 5);
 
-	assert(hxarray_reserve(arr, 4));
-	assert(arr->length == 0);
-	assert(arr->data != NULL);
-	assert(arr->capacity == 4);
-	assert(arr->element_size == sizeof(int));
+	assert(IntArray_reserve(&arr, 4));
+	assert(arr.length == 0);
+	assert(arr.buffer != NULL);
+	assert(arr.capacity == 4);
 
-	data = arr->data;
-	data[2] = 76;
-	data[3] = 87;
-	assert(data[0] == 7);
-	assert(data[1] == 5);
-	assert(data[2] == 76);
-	assert(data[3] == 87);
+	arr.buffer[2] = 76;
+	arr.buffer[3] = 87;
+	assert(arr.buffer[0] == 7);
+	assert(arr.buffer[1] == 5);
+	assert(arr.buffer[2] == 76);
+	assert(arr.buffer[3] == 87);
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_resize()
+void test_IntArray_resize()
 {
-	puts("\tTesting resize()");
-	HxArray *arr = hxarray_create_of(int);
-	assert(arr != NULL);
+	puts("\tTesting IntArray_resize()");
+	IntArray arr = IntArray_init();
 	
-	assert(hxarray_resize(arr, 2));
-	assert(arr->length == 2);
-	assert(arr->capacity == 2);
+	assert(IntArray_resize(&arr, 2));
+	assert(arr.length == 2);
+	assert(arr.capacity == 2);
+	
+	arr.buffer[0] = 2;
+	arr.buffer[1] = 600;
+	assert(arr.buffer[0] == 2);
+	assert(arr.buffer[1] == 600);
 
-	int *data = arr->data;
-	data[0] = 2;
-	data[1] = 600;
-	assert(data[0] == 2);
-	assert(data[1] == 600);
+	assert(IntArray_resize(&arr, 4));
+	assert(arr.length == 4);
+	assert(arr.capacity == 4);
 
-	assert(hxarray_resize(arr, 4));
-	assert(arr->length == 4);
-	assert(arr->capacity == 4);
+	arr.buffer[2] = 5;
+	arr.buffer[3] = 984;
+	assert(arr.buffer[0] == 2);
+	assert(arr.buffer[1] == 600);
+	assert(arr.buffer[2] == 5);
+	assert(arr.buffer[3] == 984);
 
-	data = arr->data;
-	data[2] = 5;
-	data[3] = 984;
-	assert(data[0] == 2);
-	assert(data[1] == 600);
-	assert(data[2] == 5);
-	assert(data[3] == 984);
+	assert(IntArray_resize(&arr, 0));
+	assert(arr.length == 0);
+	assert(arr.capacity == 4);
 
-	assert(hxarray_resize(arr, 0));
-	assert(arr->length == 0);
-	assert(arr->capacity == 4);
-
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_increment_size()
+void test_IntArray_increment_size()
 {
-	puts("\tTesting hxarray_increment_size()");
+	puts("\tTesting IntArray_increment_size()");
 
-	HxArray *arr = hxarray_create(sizeof(float));
-	assert(arr != NULL);
-
-	for (size_t i = 0; i < 10; ++i)
+	IntArray arr = IntArray_init();
+	
+	for (int i = 0; i < 10; ++i)
 	{
-		assert(hxarray_increment_size(arr));
-		assert(arr->length == i + 1);
-		assert(arr->capacity == i + 1);
-		float *data = arr->data;
-		data[arr->length - 1] = (float)(i * 3);
-		assert(data[arr->length - 1] == (float)(i * 3));
+		assert(IntArray_increment_size(&arr));
+		assert(arr.length == (size_t)(i + 1));
+		assert(arr.capacity == (size_t)(i + 1));
+		arr.buffer[arr.length - 1] = i * 3;
+		assert(arr.buffer[arr.length - 1] == i * 3);
 	}	
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_push()
+void test_IntArray_push()
 {
-	puts("\tTesting hxarray_push()");
+	puts("\tTesting IntArray_push()");
 
-	HxArray *arr = hxarray_create(sizeof(int));
-	assert(arr != NULL);	
+	IntArray arr = IntArray_init();
 
+	int values[] = { 1, 8, 6, 6, 2 };
+	int count = sizeof(values) / sizeof(*values);
+
+	assert(IntArray_reserve(&arr, count));
+
+	for (int i = 0; i < count; ++i)
+	{
+		IntArray_push(&arr, i);
+	}
+
+	for (int i = 0; i < count; ++i)
+	{
+		assert(arr.buffer[i] == values[i]);
+	}
+
+	IntArray_clear(&arr);
+
+	for (int i = 0; i < count; ++i)
+	{
+		IntArray_push_ptr(&arr, &i);
+	}
+
+	for (int i = 0; i < count; ++i)
+	{
+		assert(arr.buffer[i] == values[i]);
+	}
+
+	IntArray_free(&arr);
+}
+
+void test_IntArray_pushf()
+{
+	puts("\tTesting IntArray_pushf()");
+
+	IntArray arr = IntArray_init();
+	
+	IntArray_reserve(&arr, 1);
+
+	assert(IntArray_pushf(&arr, 6));
+
+	assert(arr.length == 1);
+	assert(arr.capacity == 1);
+	assert(arr.buffer[0] == 6);
+
+	assert(IntArray_pushf(&arr, 2));
+	assert(arr.length == 2);
+	assert(arr.capacity == 2);
+	assert(arr.buffer[0] == 2);
+	assert(arr.buffer[1] == 6);
+
+	assert(IntArray_pushf(&arr, 8));	
+	assert(arr.length == 3);
+	assert(arr.capacity == 3);
+	assert(arr.buffer[0] == 8);
+	assert(arr.buffer[1] == 2);
+	assert(arr.buffer[2] == 6);
+
+	IntArray_free(&arr);
+}
+
+void test_IntArray_insert()
+{
+	puts("\tTesting IntArray_insert()");
+
+	IntArray arr = IntArray_init();
+	
 	int value = 3;
-	assert(hxarray_push(arr, &value));
+	IntArray_insert(&arr, 0, &value);	
 
-	int *data = arr->data;
+	assert(arr.length == 1);
+	assert(arr.capacity == 1);
+	assert(arr.buffer[0] == 3);
 
-	assert(arr->length == 1);
-	assert(arr->capacity == 1);
-	assert(data[0] == 3);
+	value = 5;
+	IntArray_insert(&arr, 1, &value);	
 
-	value = 4;
-	assert(hxarray_push(arr, &value));
-	data = arr->data;
-
-	assert(arr->length == 2);
-	assert(arr->capacity == 2);
-	assert(data[0] == 3 && data[1] == 4);
-
-	hxarray_destroy(arr);
-}
-
-void test_hxarray_push_front()
-{
-	puts("\tTesting hxarray_push_front()");
-
-	HxArray *arr = hxarray_create(sizeof(float));
-	assert(arr != NULL);
-	hxarray_reserve(arr, 1);
-
-	float value = 6.8f;
-	assert(hxarray_push_front(arr, &value));
-	float *data = arr->data;
-
-	assert(arr->length == 1);
-	assert(arr->capacity == 1);
-	assert(data[0] == 6.8f);
-
-	value = 2.7f;
-	assert(hxarray_push_front(arr, &value));
-	data = arr->data;
-	assert(arr->length == 2);
-	assert(arr->capacity == 2);
-	assert(data[0] == 2.7f);
-	assert(data[1] == 6.8f);
-
-	value = 8.0f;
-	assert(hxarray_push_front(arr, &value));
-	data = arr->data;
-	assert(arr->length == 3);
-	assert(arr->capacity == 3);
-	assert(data[0] == 8.0f);
-	assert(data[1] == 2.7f);
-	assert(data[2] == 6.8f);
-
-	hxarray_destroy(arr);
-}
-
-void test_hxarray_insert()
-{
-	puts("\tTesting hxarray_insert()");
-
-	HxArray *arr = hxarray_create_of(double);
-	assert(arr != NULL);
-
-	double value = 3.2;
-	hxarray_insert(arr, 0, &value);
-	double *data = arr->data;
-
-	assert(arr->length == 1);
-	assert(arr->capacity == 1);
-	assert(data[0] == 3.2);
-
-	value = 5.75;
-	hxarray_insert(arr, 1, &value);
-	data = arr->data;
-
-	assert(arr->length == 2);
-	assert(arr->capacity == 2);
-	assert(data[0] == 3.2);
-	assert(data[1] == 5.75);
+	assert(arr.length == 2);
+	assert(arr.capacity == 2);
+	assert(arr.buffer[0] == 3.2);
+	assert(arr.buffer[1] == 5.75);
 
 	value = 2.345;
-	hxarray_insert(arr, 0, &value);
-	data = arr->data;
+	IntArray_insert(&arr, 0, &value);
 
-	assert(arr->length == 3);
-	assert(arr->capacity == 3);
-	assert(data[0] == 2.345);
-	assert(data[1] == 3.2);
-	assert(data[2] == 5.75);
+	assert(arr.length == 3);
+	assert(arr.capacity == 3);
+	assert(arr.buffer[0] == 2.345);
+	assert(arr.buffer[1] == 3.2);
+	assert(arr.buffer[2] == 5.75);
 
 	value = 1.0;
-	hxarray_insert(arr, 1, &value);
-	data = arr->data;
+	IntArray_insert(&arr, 1, &value);
 
-	assert(arr->length == 4);
-	assert(arr->capacity == 4);
-	assert(data[0] == 2.345);
-	assert(data[1] == 1.0);
-	assert(data[2] == 3.2);
-	assert(data[3] == 5.75);
+	assert(arr.length == 4);
+	assert(arr.capacity == 4);
+	assert(arr.buffer[0] == 2.345);
+	assert(arr.buffer[1] == 1.0);
+	assert(arr.buffer[2] == 3.2);
+	assert(arr.buffer[3] == 5.75);
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_pop()
+void test_IntArray_pop()
 {
-	puts("\tTesting hxarray_pop()");
+	puts("\tTesting IntArray_pop()");
 
-	HxArray *arr = hxarray_create(sizeof(char));
-	assert(arr != NULL);
-	hxarray_resize(arr, 3);
-
-	hxarray_pop(arr);
-	assert(arr->length == 2);
-	assert(arr->capacity == 3);
+	IntArray arr = IntArray_init();
 	
-	hxarray_pop(arr);
-	assert(arr->length == 1);
-	assert(arr->capacity == 3);
+	IntArray_resize(&arr, 3);
+
+	IntArray_pop(&arr);
+	assert(arr.length == 2);
+	assert(arr.capacity == 3);
 	
-	hxarray_pop(arr);
-	assert(arr->length == 0);
-	assert(arr->capacity == 3);
-
-	hxarray_pop(arr);
-	assert(arr->length == 0);
-	assert(arr->capacity == 3);
-
-	hxarray_destroy(arr);
-}
-
-void test_hxarray_pop_front()
-{
-	puts("\tTesting hxarray_popf()");
-
-	HxArray *arr = hxarray_create_of(char);
-	assert(arr != NULL);
-	hxarray_resize(arr, 3);
-
-	char *data = arr->data;
-	data[0] = 'a';
-	data[1] = 'b';
-	data[2] = 'c';
-
-	hxarray_pop_front(arr);
-	assert(arr->length == 2);
-	assert(arr->capacity == 3);
-	assert(data[0] == 'b');
-
-	hxarray_pop_front(arr);
-	assert(arr->length == 1);
-	assert(arr->capacity == 3);
-	assert(data[0] == 'c');
-
-	hxarray_pop_front(arr);
-	assert(arr->length == 0);
-	assert(arr->capacity == 3);
-
-	hxarray_destroy(arr);
-}
-
-void test_hxarray_erase()
-{
-	puts("\tTesting hxarray_erase()");
-
-	HxArray *arr = hxarray_create_of(char);
-	assert(arr != NULL);
-	hxarray_resize(arr, 3);
-
-	char *data = arr->data;
-	data[0] = 'a';
-	data[1] = 'b';
-	data[2] = 'c';
-
-	hxarray_erase(arr, 1);
-	assert(arr->length == 2);
-	assert(arr->capacity == 3);
-	assert(data[0] == 'a');
-	assert(data[1] == 'c');
-
-	hxarray_erase(arr, 0);
-	assert(arr->length == 1);
-	assert(arr->capacity == 3);
-	assert(data[0] == 'c');
+	IntArray_pop(&arr);
+	assert(arr.length == 1);
+	assert(arr.capacity == 3);
 	
-	hxarray_erase(arr, 0);
-	assert(arr->length == 0);
-	assert(arr->capacity == 3);
+	IntArray_pop(&arr);
+	assert(arr.length == 0);
+	assert(arr.capacity == 3);
 
-	hxarray_destroy(arr);
+	IntArray_pop(&arr);
+	assert(arr.length == 0);
+	assert(arr.capacity == 3);
+
+	IntArray_free(&arr);
 }
 
-void test_hxarray_set()
+void test_IntArray_popf()
 {
-	puts("\tTesting hxarray_set()");
+	puts("\tTesting IntArray_popf()");
 
-	int a = 0;
-	int b = 1;
-	int c = 2;
-
-	HxArray *arr = hxarray_create_of(int*);
-	assert(arr != NULL);
-	hxarray_resize(arr, 3);
-
-	int **data = arr->data;
-	data[0] = &a;
-	data[1] = &b;
-	data[2] = &c;
-
-	int *ptr = &a;
-	hxarray_set(arr, 1, &ptr);
-	assert(data[1] == &a);
-	assert(data[0] == data[1]);
+	IntArray arr = IntArray_init();
 	
-	hxarray_set(arr, 2, &ptr);
-	assert(data[2] == &a);
-	assert(data[0] == data[1]);
-	assert(data[1] == data[2]);
+	IntArray_resize(&arr, 3);
 
-	ptr = &c;
-	hxarray_set(arr, 0, &ptr);
-	assert(data[0] == &c);
+	arr.buffer[0] = 'a';
+	arr.buffer[1] = 'b';
+	arr.buffer[2] = 'c';
 
-	assert(arr->length == 3);
-	assert(arr->capacity == 3);
+	IntArray_popf(&arr);
+	assert(arr.length == 2);
+	assert(arr.capacity == 3);
+	assert(arr.buffer[0] == 'b');
 
-	hxarray_destroy(arr);
+	IntArray_popf(&arr);
+	assert(arr.length == 1);
+	assert(arr.capacity == 3);
+	assert(arr.buffer[0] == 'c');
+
+	IntArray_popf(&arr);
+	assert(arr.length == 0);
+	assert(arr.capacity == 3);
+
+	IntArray_free(&arr);
 }
 
-void test_hxarray_get()
+void test_IntArray_erase()
 {
-	puts("\tTesting hxarray_get()");
+	puts("\tTesting IntArray_erase()");
 
-	HxArray *arr = hxarray_create_of(unsigned long long);
-	assert(arr != NULL);
-	hxarray_resize(arr, 3);
+	IntArray arr = IntArray_init();
+	
+	IntArray_resize(&arr, 3);
 
-	unsigned long long *data = arr->data;
-	data[0] = 123;
-	data[1] = 456;
-	data[2] = 789;
+	arr.buffer[0] = 'a';
+	arr.buffer[1] = 'b';
+	arr.buffer[2] = 'c';
 
-	unsigned long long value;
-	hxarray_get(arr, &value, 0);
-	assert(value == 123);
+	IntArray_erase(&arr, 1);
+	assert(arr.length == 2);
+	assert(arr.capacity == 3);
+	assert(arr.buffer[0] == 'a');
+	assert(arr.buffer[1] == 'c');
 
-	hxarray_get(arr, &value, 1);
-	assert(value == 456);
+	IntArray_erase(&arr, 0);
+	assert(arr.length == 1);
+	assert(arr.capacity == 3);
+	assert(arr.buffer[0] == 'c');
+	
+	IntArray_erase(&arr, 0);
+	assert(arr.length == 0);
+	assert(arr.capacity == 3);
 
-	hxarray_get(arr, &value, 2);
-	assert(value == 789);
-
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_at()
+void test_IntArray_set()
 {
-	puts("\tTesting hxarray_at()");
+	puts("\tTesting IntArray_set()");
 
-	HxArray *arr = hxarray_create_of(unsigned long long);
-	hxarray_resize(arr, 3);
+	IntArray arr = IntArray_init();
+	
+	assert(IntArray_resize(&arr, 3));
 
-	unsigned long long *data = arr->data;
-	data[0] = 123;
-	data[1] = 456;
-	data[2] = 789;
+	arr.buffer[0] = 0;
+	arr.buffer[1] = 1;
+	arr.buffer[2] = 2;
 
-	unsigned long long *ptr;
-	ptr = hxarray_at(arr, 0);
+	IntArray_set(&arr, 1, 0);
+	assert(arr.buffer[1] == 0);
+	assert(arr.buffer[0] == arr.buffer[1]);
+	
+	IntArray_set(&arr, 2, 0);
+	assert(arr.buffer[2] == 0);
+	assert(arr.buffer[0] == arr.buffer[1]);
+	assert(arr.buffer[1] == arr.buffer[2]);
+
+	IntArray_set(&arr, 0, 2);
+	assert(arr.buffer[0] == 2);
+
+	assert(arr.length == 3);
+	assert(arr.capacity == 3);
+
+	IntArray_free(&arr);
+}
+
+void test_IntArray_get()
+{
+	puts("\tTesting IntArray_get()");
+
+	IntArray arr = IntArray_init();
+	
+	IntArray_resize(&arr, 3);
+
+	arr.buffer[0] = 123;
+	arr.buffer[1] = 456;
+	arr.buffer[2] = 789;
+
+	assert(IntArray_get(&arr, 0) == 123);
+	assert(IntArray_get(&arr, 1) == 456);	
+	assert(IntArray_get(&arr, 2) == 789);
+
+	IntArray_free(&arr);
+}
+
+void test_IntArray_at()
+{
+	puts("\tTesting IntArray_at()");
+
+	IntArray arr = IntArray_init();
+	IntArray_resize(&arr, 3);
+
+	arr.buffer[0] = 123;
+	arr.buffer[1] = 456;
+	arr.buffer[2] = 789;
+
+	int *ptr = IntArray_get_ptr(&arr, 0);
 	assert(*ptr == 123);
 
-	ptr = hxarray_at(arr, 1);
+	ptr = IntArray_get_ptr(&arr, 1);
 	assert(*ptr == 456);
 
-	ptr = hxarray_at(arr, 2);
+	ptr = IntArray_get_ptr(&arr, 2);
 	assert(*ptr == 789);
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_front()
+void test_IntArray_front()
 {
-	puts("\tTesting hxarray_front()");
+	puts("\tTesting IntArray_front()");
 
-	HxArray *arr = hxarray_create_of(char);
-	hxarray_resize(arr, 3);
+	IntArray arr = IntArray_init();
+	IntArray_resize(&arr, 3);
 
-	char *data = arr->data;
-	data[0] = 'a';
-	data[1] = 'b';
-	data[2] = 'c';
+	arr.buffer[0] = 'a';
+	arr.buffer[1] = 'b';
+	arr.buffer[2] = 'c';
 
-	char *front = hxarray_front(arr);
-	assert(*front == 'a');
+	int front = IntArray_front(&arr);
+	assert(front == 'a');
 
-	char tmp = 'h';
-	hxarray_push_front(arr, &tmp);
-	front = hxarray_front(arr);
-	assert(*front == 'h');
+	IntArray_pushf(&arr, 'h');
+	front = IntArray_front(&arr);
+	assert(front == 'h');
 
-	hxarray_pop_front(arr);
-	front = hxarray_front(arr);
-	assert(*front == 'a');
+	IntArray_popf(&arr);
+	front = IntArray_front(&arr);
+	assert(front == 'a');
 
-	hxarray_pop_front(arr);
-	front = hxarray_front(arr);
-	assert(*front == 'b');
+	IntArray_popf(&arr);
+	front = IntArray_front(&arr);
+	assert(front == 'b');
 
-	hxarray_pop_front(arr);
-	front = hxarray_front(arr);
-	assert(*front == 'c');
+	IntArray_popf(&arr);
+	front = IntArray_front(&arr);
+	assert(front == 'c');
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_back()
+void test_IntArray_back()
 {
-	puts("\tTesting hxarray_back()");
+	puts("\tTesting IntArray_back()");
 
-	HxArray *arr = hxarray_create_of(char);
-	hxarray_resize(arr, 3);
+	IntArray arr = IntArray_init();
+	IntArray_resize(&arr, 3);
 
-	char *data = arr->data;
-	data[0] = 'a';
-	data[1] = 'b';
-	data[2] = 'c';
+	arr.buffer[0] = 'a';
+	arr.buffer[1] = 'b';
+	arr.buffer[2] = 'c';
 
-	char *back = hxarray_back(arr);
-	assert(*back == 'c');
+	int back = IntArray_back(&arr);
+	assert(back == 'c');
 
-	char tmp = 'h';
-	hxarray_push(arr, &tmp);
-	back = hxarray_back(arr);
-	assert(*back == 'h');
+	IntArray_push(&arr, 'h');
+	back = IntArray_back(&arr);
+	assert(back == 'h');
 
-	hxarray_pop(arr);
-	back = hxarray_back(arr);
-	assert(*back == 'c');
+	IntArray_pop(&arr);
+	back = IntArray_back(&arr);
+	assert(back == 'c');
 
-	hxarray_pop(arr);
-	back = hxarray_back(arr);
-	assert(*back == 'b');
+	IntArray_pop(&arr);
+	back = IntArray_back(&arr);
+	assert(back == 'b');
 
-	hxarray_pop(arr);
-	back = hxarray_back(arr);
-	assert(*back == 'a');
+	IntArray_pop(&arr);
+	back = IntArray_back(&arr);
+	assert(back == 'a');
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_swap()
+void test_IntArray_swap()
 {
-	puts("\tTesting hxarray_swap()");
+	puts("\tTesting IntArray_swap()");
 
-	HxArray *arr = hxarray_create_of(char);
-	hxarray_resize(arr, 3);
+	IntArray arr = IntArray_init();
+	IntArray_resize(&arr, 3);
 
-	char *data = arr->data;
-	data[0] = 'a';
-	data[1] = 'b';
-	data[2] = 'c';
+	arr.buffer[0] = 'a';
+	arr.buffer[1] = 'b';
+	arr.buffer[2] = 'c';
 
-	char tmp;
-	hxarray_swap(arr, &tmp, 0, 1);
-	assert(data[0] == 'b');
-	assert(data[1] == 'a');
-	assert(data[2] == 'c');
+	IntArray_swap(&arr, 0, 1);
+	assert(arr.buffer[0] == 'b');
+	assert(arr.buffer[1] == 'a');
+	assert(arr.buffer[2] == 'c');
 	
-	hxarray_swap(arr, &tmp, 1, 2);
-	assert(data[0] == 'b');
-	assert(data[1] == 'c');
-	assert(data[2] == 'a');
+	IntArray_swap(&arr, 1, 2);
+	assert(arr.buffer[0] == 'b');
+	assert(arr.buffer[1] == 'c');
+	assert(arr.buffer[2] == 'a');
 
-	hxarray_swap(arr, &tmp, 0, 2);
-	assert(data[0] == 'a');
-	assert(data[1] == 'c');
-	assert(data[2] == 'b');
+	IntArray_swap(&arr, 0, 2);
+	assert(arr.buffer[0] == 'a');
+	assert(arr.buffer[1] == 'c');
+	assert(arr.buffer[2] == 'b');
 
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
-void test_hxarray_clear()
+void test_IntArray_clear()
 {
-	puts("\tTesting clear()");
+	puts("\tTesting IntArray_clear()");
 
-	HxArray *arr = hxarray_create_of(int);
+	IntArray arr = IntArray_init();
 
-	hxarray_resize(arr, 3);
-	assert(arr->length == 3);
-	assert(arr->capacity == 3);
+	IntArray_resize(&arr, 3);
+	assert(arr.length == 3);
+	assert(arr.capacity == 3);
 
-	hxarray_clear(arr);
-	assert(arr->length == 0);
-	assert(arr->capacity == 3);
+	IntArray_clear(&arr);
+	assert(arr.length == 0);
+	assert(arr.capacity == 3);
 
-	hxarray_clear(arr);
-	assert(arr->length == 0);
-	assert(arr->capacity == 3);
+	IntArray_clear(&arr);
+	assert(arr.length == 0);
+	assert(arr.capacity == 3);
 
-	hxarray_destroy(arr);
-}
-
-void test_hxarray_is_empty()
-{
-	puts("\tTesting isEmpty()");
-
-	HxArray *arr = hxarray_create_of(bool);
-	hxarray_resize(arr, 3);
-
-	assert(!hxarray_is_empty(arr));
-
-	hxarray_pop(arr);
-	assert(arr->length == 2);
-	assert(!hxarray_is_empty(arr));
-	hxarray_pop(arr);
-	assert(arr->length == 1);
-	assert(!hxarray_is_empty(arr));
-	hxarray_pop(arr);
-	assert(arr->length == 0);
-	assert(hxarray_is_empty(arr));
-	assert(hxarray_resize(arr, 1));
-	assert(!hxarray_is_empty(arr));
-
-	hxarray_destroy(arr);
+	IntArray_free(&arr);
 }
 
 int main(void)
 {
-	puts("Testing HxArray...");
+	puts("Testing IntArray...");
 
-	test_hxarray_create();
-	test_hxarray_increment_size();
-	test_hxarray_resize();
-	test_hxarray_push();
-	test_hxarray_push_front();
-	test_hxarray_insert();
-	test_hxarray_pop();
-	test_hxarray_pop_front();
-	test_hxarray_erase();
-	test_hxarray_set();
-	test_hxarray_get();
-	test_hxarray_at();
-	test_hxarray_front();
-	test_hxarray_back();
-	test_hxarray_swap();
-	test_hxarray_clear();
-	test_hxarray_is_empty();
+	test_IntArray_create();
+	test_IntArray_increment_size();
+	test_IntArray_resize();
+	test_IntArray_push();
+	test_IntArray_pushf();
+	test_IntArray_insert();
+	test_IntArray_pop();
+	test_IntArray_popf();
+	test_IntArray_erase();
+	test_IntArray_set();
+	test_IntArray_get();
+	test_IntArray_at();
+	test_IntArray_front();
+	test_IntArray_back();
+	test_IntArray_swap();
+	test_IntArray_clear();
 
 	puts("All tests passed");
 

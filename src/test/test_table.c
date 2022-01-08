@@ -22,14 +22,13 @@ const char * const invalid_keys[] = {
 
 const size_t invalid_key_count = sizeof(invalid_keys) / sizeof(*invalid_keys);
 
-void testCreate()
+void test_create()
 {
 	puts("\tTesting hxtable_create()");
 
-	HxTable *table = hxtable_create_of(int);
+	HxTable table = hxtable_create_of(int);
 
-	assert(table != NULL);
-	assert(table->data != NULL);
+	assert(table->data = NULL);
 	assert(table->element_size == sizeof(int));
 	assert(table->count == 0);
 	assert(table->size_index == 0);
@@ -39,7 +38,7 @@ void testCreate()
 
 #define assert_node(name) assert(#name " is valid" && name->key == NULL && name->value == NULL && name->deleted == false)
 
-void testResize()
+void test_resize()
 {
 	puts("\tTesting hxtable_resize()");
 
@@ -76,7 +75,7 @@ void testResize()
 	hxtable_destroy(table);
 }
 
-void testReserve()
+void test_reserve()
 {
 	puts("\tTesting hxtable_reserve()");
 	HxTable *table = hxtable_create_of(bool);
@@ -101,7 +100,7 @@ void testReserve()
 	hxtable_destroy(table);
 }
 
-void testShrink()
+void test_shrink()
 {
 	puts("\tTesting hxtable_shrink()");
 
@@ -120,7 +119,7 @@ void testShrink()
 	hxtable_destroy(table);
 }
 
-void testSet()
+void test_set()
 {
 	puts("\tTesting hxtable_set()");
 	HxTable *table = hxtable_create_of(int);
@@ -158,7 +157,7 @@ void testSet()
 	hxtable_destroy(table);
 }
 
-void testErase()
+void test_erase()
 {
 	puts("\tTesting hxtable_erase()");
 	HxTable *table = hxtable_create_of(int);
@@ -196,7 +195,7 @@ void testErase()
 	hxtable_destroy(table);
 }
 
-void testClear()
+void test_clear()
 {
 	puts("\tTesting hxtable_clear()");
 	HxTable *table = hxtable_create_of(int);
@@ -224,7 +223,7 @@ void testClear()
 	hxtable_destroy(table);
 }
 
-void testSwap()
+void test_swap()
 {
 	puts("\tTesting hxtable_swap()");
 
@@ -268,7 +267,7 @@ void testSwap()
 	hxtable_destroy(table);
 }
 
-void testGet()
+void test_get()
 {
 	puts("\tTesting hxtable_get()");
 	HxTable *table = hxtable_create_of(double);
@@ -298,7 +297,7 @@ void testGet()
 }
 
 
-void testAt()
+void test_at()
 {
 	puts("\tTesting hxtable_at()");
 	HxTable *table = hxtable_create_of(int);
@@ -322,9 +321,9 @@ void testAt()
 	hxtable_destroy(table);
 }
 
-void testContains()
+void test_contains()
 {
-	puts("\tTesting HxTable()");
+	puts("\tTesting hxtable_contains()");
 
 	HxTable *table = hxtable_create_of(int);
 	assert(table != NULL);
@@ -351,7 +350,7 @@ void testContains()
 	hxtable_destroy(table);
 }
 
-void testSize()
+void test_size()
 {
 	puts("\tTesting hxtable_size()");
 
@@ -369,7 +368,7 @@ void testSize()
 	hxtable_destroy(table);
 }
 
-void testIsEmpty()
+void test_is_empty()
 {
 	puts("\tTesting hxtable_is_empty()");
 
@@ -388,21 +387,21 @@ void testIsEmpty()
 int main(void)
 {
 	puts("Testing HxTable...");
-	testCreate();
-	testResize();
-	testReserve();
-	testShrink();
-	testSet();
-	testErase();
-	testClear();
-	testSwap();
-	testGet();
-	testAt();
-	testContains();
-	testSize();
-	testIsEmpty();
+	test_create();
+	test_resize();
+	test_reserve();
+	test_shrink();
+	test_set();
+	test_erase();
+	test_clear();
+	test_swap();
+	test_get();
+	test_at();
+	test_contains();
+	test_size();
+	test_is_empty();
 
-	puts("All tests passed");
+	puts("All test_s passed");
 
 	return 0;
 }

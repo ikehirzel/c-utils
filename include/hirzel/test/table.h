@@ -4,28 +4,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef size_t (*HxHashFunction)(const char *key);
+typedef struct HxTable HxTable;
 
-typedef struct HxTableNode
-{
-	char *key;
-	void *value;
-	bool deleted;
-} HxTableNode;
+extern size_t hxtable_hash_string(const char *string);
 
-typedef struct HxTable
-{
-	HxTableNode *data;
-	HxHashFunction hash_function;
-	size_t size_index;
-	size_t count;
-	size_t element_size;
-} HxTable;
-
-extern size_t hxtable_hash_string(const char *key);
-
-extern bool hxtable_create(HxTable *table, size_t element_size);
 #define hxtable_create_of(type) hxtable_create(sizeof(type))
+extern HxTable *hxtable_create(size_t element_size);
 extern void hxtable_destroy(HxTable *table);
 extern bool hxtable_resize(HxTable *table, size_t new_size_index);
 extern bool hxtable_reserve(HxTable *table, size_t min_count);
@@ -34,6 +18,7 @@ extern bool hxtable_set(HxTable *table, const char* key, const void *value);
 extern void hxtable_erase(HxTable *table, const char *key);
 extern void hxtable_clear(HxTable *table);
 extern bool hxtable_swap(HxTable *table, void *tmp, const char *a, const char *b);
+
 extern bool hxtable_get(const HxTable *table, void *out, const char *key);
 extern void *hxtable_at(const HxTable *table, const char *key);
 extern bool hxtable_contains(const HxTable *table, const char *key);
@@ -49,13 +34,30 @@ extern bool hxtable_is_empty(const HxTable *table);
 #include <string.h>
 #include <assert.h>
 
+struct HxTableNode
+{
+	char *key;
+	void *value;
+	bool deleted;
+};
+
+typedef size_t (*HxHashFunction)(const char *key);
+
+struct HxTable
+{
+	struct HxTableNode *data;
+	HxHashFunction hash_function;
+	size_t size_index;
+	size_t count;
+	size_t element_size;
+};
+
 static const size_t hxtable_sizes[] = {
 	11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853,
 	25717, 51437, 102877, 205759, 411527, 823117, 1646237, 3292489, 6584983,
 	13169977, 26339969, 52679969, 105359939, 210719881, 421439783, 842879579,
 	1685759167, 3371518343, 6743036717
 };
-
 static const size_t HxTable_size_count = sizeof(hxtable_sizes) / sizeof(*hxtable_sizes);
 
 static size_t hxtable_get_min_size_index(size_t count)
@@ -148,13 +150,30 @@ struct HxTableNode *hxtable_find_node(const HxTable *table, const char *key)
 	return out;
 }
 
-bool hxtable_create(HxTable *table, size_t element_size)
+HxTable *hxtable_create(size_t element_size)
 {
 	assert(element_size > 0);
 
-	void *data = malloc(element_size * hxtable_sizes[0])
+	HxTable *table = malloc(sizeof(HxTable));
+	void *data = calloc(hxtable_sizes[0], sizeof(struct HxTableNode));
 
-	return (HxTable) { NULL, hxtable_hash_string, 0, 0, element_size };
+	if (!table || !data)
+	{
+		free(table);
+		free(data);
+
+		return NULL;
+	}
+
+	*table = (HxTable) {
+		.data = data,
+		.hash_function = hxtable_hash_string,
+		.size_index = 0,
+		.count = 0,
+		.element_size = element_size
+	};
+
+	return table;
 }
 
 void hxtable_destroy(HxTable *table)
