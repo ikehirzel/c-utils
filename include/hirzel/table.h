@@ -6,21 +6,21 @@
 
 typedef size_t (*HxHashFunction)(const char *key);
 
-typedef struct HxTableNode
-{
-	char *key;
-	void *value;
-	bool deleted;
-} HxTableNode;
-
-typedef struct HxTable
-{
-	HxTableNode *data;
-	HxHashFunction hash_function;
-	size_t size_index;
-	size_t count;
-	size_t element_size;
-} HxTable;
+#define HXARRAY_STRUCT(TYPE, NAME)\
+typedef struct __##NAME##Node\
+{\
+	char *key;\
+	TYPE value;\
+	bool deleted;\
+} NAME##Node;\
+\
+typedef struct __##NAME\
+{\
+	NAME##Node *data;\
+	HxHashFunction hash_function;\
+	size_t size_index;\
+	size_t count;\
+} NAME;
 
 extern size_t hxtable_hash_string(const char *key);
 
