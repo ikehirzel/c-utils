@@ -6,10 +6,10 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#define HXARRAY_STRUCT(TYPE, NAME)\
+#define HIRZEL_ARRAY_STRUCT(TYPE, NAME)\
 
 
-#define HXARRAY_DECLARE(TYPE, NAME)\
+#define HIRZEL_ARRAY_DECLARE(TYPE, NAME)\
 \
 typedef struct __##NAME\
 {\
@@ -49,7 +49,7 @@ inline static size_t NAME##_length(NAME *array) { assert(array != NULL); return 
 inline static size_t NAME##_capacity(NAME *array) { assert(array != NULL); return array->capacity; }
 
 
-#define HXARRAY_DEFINE(TYPE, NAME)\
+#define HIRZEL_ARRAY_DEFINE(TYPE, NAME)\
 \
 NAME NAME##_init()\
 {\

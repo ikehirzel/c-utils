@@ -1,7 +1,7 @@
 #include <hirzel/table.h>
 
-HXTABLE_DECLARE(int, IntTable)
-HXTABLE_DEFINE(int, IntTable)
+HIRZEL_TABLE_DECLARE(int, IntTable)
+HIRZEL_TABLE_DEFINE(int, IntTable)
 
 // standard library
 #include <assert.h>

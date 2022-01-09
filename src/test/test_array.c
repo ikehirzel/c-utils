@@ -1,7 +1,7 @@
 #include <hirzel/array.h>
 
-HXARRAY_DECLARE(int, IntArray)
-HXARRAY_DEFINE(int, IntArray)
+HIRZEL_ARRAY_DECLARE(int, IntArray)
+HIRZEL_ARRAY_DEFINE(int, IntArray)
 
 // standard library
 #include <stdio.h>

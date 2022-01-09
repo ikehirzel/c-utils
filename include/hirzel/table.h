@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <string.h>
 
-#define HXTABLE_DECLARE(TYPE, NAME)\
+#define HIRZEL_TABLE_DECLARE(TYPE, NAME)\
 \
 typedef struct __##NAME##Node\
 {\
@@ -42,7 +42,7 @@ bool NAME##_is_empty(const NAME *table);\
 size_t NAME##_hash_string(const char *key);
 
 
-#define HXTABLE_DEFINE(TYPE, NAME)\
+#define HIRZEL_TABLE_DEFINE(TYPE, NAME)\
 \
 static const size_t NAME##_sizes[] = {\
 	11, 23, 47, 97, 197, 397, 797, 1597, 3203, 6421, 12853,\
