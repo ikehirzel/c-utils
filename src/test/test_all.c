@@ -24,7 +24,7 @@ int main()
 	int fail_count = 0;
 
 	for (size_t i = 0; i < test_count; ++i)
-	{
+	{		
 		if (runTest(tests[i]))
 			fail_count += 1;
 		putchar('\n');
@@ -34,7 +34,7 @@ int main()
 	if (!fail_count)
 		puts("All tests succeeded");
 	else
-		printf("%d tests succeeded", fail_count);
+		printf("\033[31m%d tests failed\033[0m\n", fail_count);
 
 	return fail_count;
 }

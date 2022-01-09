@@ -7,26 +7,30 @@
 #include <assert.h>
 
 #define HXARRAY_STRUCT(TYPE, NAME)\
+
+
+#define HXARRAY_DECLARE(TYPE, NAME)\
+\
 typedef struct __##NAME\
 {\
 	TYPE *buffer;\
 	size_t length;\
 	size_t capacity;\
-} NAME;
-
-#define HXARRAY_DECLARE(TYPE, NAME)\
-HXARRAY_STRUCT(TYPE, NAME)\
+} NAME;\
+\
 NAME NAME##_init();\
 void NAME##_free(NAME *array);\
 bool NAME##_reserve(NAME *array, size_t capacity);\
 bool NAME##_resize(NAME *array, size_t length);\
-bool NAME##_increment_length(NAME *array);\
-bool NAME##_push(NAME *array, TYPE item);\
-bool NAME##_push_ptr(NAME *array, const TYPE *item);\
-bool NAME##_pushf(NAME *array, TYPE item);\
-bool NAME##_pushf_ptr(NAME *array, const TYPE *item);\
-bool NAME##_insert(NAME *array, size_t pos, const TYPE *item);\
-bool NAME##_insert_ptr(NAME *array, size_t pos, const TYPE *item);\
+TYPE *NAME##_push_raw(NAME *array);\
+TYPE *NAME##_push(NAME *array, TYPE item);\
+TYPE *NAME##_push_ptr(NAME *array, const TYPE *item);\
+TYPE *NAME##_pushf_raw(NAME *array);\
+TYPE *NAME##_pushf(NAME *array, TYPE item);\
+TYPE *NAME##_pushf_ptr(NAME *array, const TYPE *item);\
+TYPE *NAME##_insert_raw(NAME *array, size_t pos);\
+TYPE *NAME##_insert(NAME *array, size_t pos, TYPE item);\
+TYPE *NAME##_insert_ptr(NAME *array, size_t pos, const TYPE *item);\
 void NAME##_pop(NAME *array);\
 void NAME##_popf(NAME *array);\
 void NAME##_erase(NAME *array, size_t pos);\
@@ -40,12 +44,13 @@ TYPE *NAME##_front_ptr(NAME *array);\
 TYPE NAME##_back(NAME *array);\
 TYPE *NAME##_back_ptr(NAME *array);\
 inline static void NAME##_clear(NAME *array) { assert(array != NULL); array->length = 0; }\
-inline static bool NAME##_is_empty(NAME *array) { assert(array != NULL); return array->length != 0; }\
+inline static bool NAME##_is_empty(NAME *array) { assert(array != NULL); return array->length == 0; }\
 inline static size_t NAME##_length(NAME *array) { assert(array != NULL); return array->length; }\
 inline static size_t NAME##_capacity(NAME *array) { assert(array != NULL); return array->capacity; }
 
 
 #define HXARRAY_DEFINE(TYPE, NAME)\
+\
 NAME NAME##_init()\
 {\
 	return (NAME) { NULL, 0, 0 };\
@@ -79,8 +84,10 @@ bool NAME##_reserve(NAME *array, size_t capacity)\
 bool NAME##_resize(NAME *array, size_t length)\
 {\
 	assert(array != NULL);\
+\
 	if (array->length == length)\
 		return true;\
+\
 	if (length < array->length)\
 	{\
 		array->length = length;\
@@ -88,66 +95,136 @@ bool NAME##_resize(NAME *array, size_t length)\
 	else\
 	{\
 		TYPE *tmp = realloc(array->buffer, length * sizeof(TYPE));\
-		if (!tmp) return false;\
+\
+		if (!tmp)\
+			return false;\
+\
 		array->buffer = tmp;\
 		array->length = length;\
 		array->capacity = length;\
 	}\
+\
 	return true;\
 }\
 \
-bool NAME##_increment_size(NAME *array)\
+TYPE *NAME##_push_raw(NAME *array)\
 {\
 	assert(array != NULL);\
+\
 	if (array->length == array->capacity)\
 	{\
 		TYPE *tmp = realloc(array->buffer, (array->length + 1) * sizeof(TYPE));\
-		if (!tmp) return false;\
+\
+		if (!tmp)\
+			return NULL;\
+\
 		array->buffer = tmp;\
 		array->capacity += 1;\
 	}\
+\
+	TYPE *back = array->buffer + array->length;\
 	array->length += 1;\
-	return true;\
+\
+	return back;\
 }\
 \
-bool NAME##_push_ptr(NAME *array, const TYPE *item)\
+TYPE *NAME##_push_ptr(NAME *array, const TYPE *item)\
 {\
 	assert(array != NULL);\
 	assert(item != NULL);\
-	if (!NAME##_increment_size(array)) return false;\
-	array->buffer[array->length - 1] = *item;\
-	return true;\
+\
+	TYPE *back = NAME##_push_raw(array);\
+\
+	if (back != NULL)\
+		*back = *item;\
+\
+	return back;\
 }\
 \
-bool NAME##_push(NAME *array, TYPE item)\
+TYPE *NAME##_push(NAME *array, TYPE item)\
 {\
-	return NAME##_push_ptr(array, &item);\
+	assert(array != NULL);\
+\
+	TYPE * back = NAME##_push_raw(array);\
+\
+	if (back != NULL)\
+		*back = item;\
+\
+	return back;\
 }\
 \
-bool NAME##_pushf_ptr(NAME *array, const TYPE *item)\
+TYPE *NAME##_pushf_raw(NAME *array)\
+{\
+	assert(array != NULL);\
+\
+	if(!NAME##_push_raw(array))\
+		return NULL;\
+\
+	for (size_t i = array->length - 1; i >= 1; --i)\
+		array->buffer[i] = array->buffer[i - 1];\
+\
+	return array->buffer;\
+}\
+\
+TYPE *NAME##_pushf_ptr(NAME *array, const TYPE *item)\
 {\
 	assert(array != NULL);\
 	assert(item != NULL);\
-	if (!NAME##_increment_size(array)) return false;\
-	for (size_t i = array->length - 1; i >= 1; --i) array->buffer[i] = array->buffer[i - 1];\
-	array->buffer[0] = *item;\
-	return true;\
+\
+	TYPE *front = NAME##_pushf_raw(array);\
+\
+	if (front != NULL)\
+		*front = *item;\
+\
+	return front;\
 }\
 \
-bool NAME##_pushf(NAME *array, TYPE item)\
+TYPE *NAME##_pushf(NAME *array, TYPE item)\
 {\
-	return NAME##_pushf_ptr(array, &item);\
+	assert(array != NULL);\
+\
+	TYPE *front = NAME##_pushf_raw(array);\
+\
+	if (front != NULL)\
+		*front = item;\
+\
+	return front;\
 }\
 \
-bool NAME##_insert(NAME *array, size_t pos, const TYPE *item)\
+TYPE *NAME##_insert_raw(NAME *array, size_t pos)\
 {\
 	assert(array != NULL);\
 	assert(pos <= array->length);\
+\
+	if (NAME##_push_raw(array) == NULL)\
+		return NULL;\
+\
+	for (size_t i = array->length; i > pos; --i)\
+		array->buffer[i - 1] = array->buffer[i - 2];\
+\
+	return array->buffer + pos;\
+}\
+\
+TYPE *NAME##_insert(NAME *array, size_t pos, TYPE item)\
+{\
+	TYPE *ptr = NAME##_insert_raw(array, pos);\
+\
+	if (ptr != NULL)\
+		*ptr = item;\
+\
+	return ptr;\
+}\
+\
+TYPE *NAME##_insert_ptr(NAME *array, size_t pos, const TYPE *item)\
+{\
 	assert(item != NULL);\
-	if (!NAME##_increment_size(array)) return false;\
-	for (size_t i = array->length; i > pos; --i) array->buffer[i - 1] = array->buffer[i - 2];\
-	array->buffer[pos] = *item;\
-	return true;\
+\
+	TYPE *ptr = NAME##_insert_raw(array, pos);\
+\
+	if (ptr != NULL)\
+		*ptr = *item;\
+\
+	return ptr;\
 }\
 \
 void NAME##_pop(NAME *array)\
@@ -159,10 +236,14 @@ void NAME##_pop(NAME *array)\
 void NAME##_popf(NAME *array)\
 {\
 	assert(array != NULL);\
-	if (array->length == 0) return;\
+\
+	if (array->length == 0)\
+		return;\
+\
 	array->length -= 1;\
-	size_t end = array->length - 1;\
-	for (size_t i = 0; i < end; ++i) array->buffer[i] = array->buffer[i + 1];\
+\
+	for (size_t i = 0; i < array->length; ++i)\
+		array->buffer[i] = array->buffer[i + 1];\
 }\
 \
 void NAME##_erase(NAME *array, size_t pos)\

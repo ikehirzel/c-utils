@@ -7,9 +7,9 @@ HXARRAY_DEFINE(int, IntArray)
 #include <stdio.h>
 #include <assert.h>
 
-void test_IntArray_create()
+void test_create()
 {
-	puts("\tTesting IntArray_create()");
+	puts("\tTesting create()");
 
 	IntArray arr = IntArray_init();
 
@@ -18,9 +18,9 @@ void test_IntArray_create()
 	assert(arr.capacity == 0);
 }
 
-void test_IntArray_reserve()
+void test_reserve()
 {
-	puts("\tTesting IntArray_reserve()");
+	puts("\tTesting reserve()");
 	IntArray arr = IntArray_init();
 
 	assert(IntArray_reserve(&arr, 2));
@@ -48,9 +48,9 @@ void test_IntArray_reserve()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_resize()
+void test_resize()
 {
-	puts("\tTesting IntArray_resize()");
+	puts("\tTesting resize()");
 	IntArray arr = IntArray_init();
 	
 	assert(IntArray_resize(&arr, 2));
@@ -80,15 +80,15 @@ void test_IntArray_resize()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_increment_size()
+void test_push_raw()
 {
-	puts("\tTesting IntArray_increment_size()");
+	puts("\tTesting push_raw()");
 
 	IntArray arr = IntArray_init();
 	
 	for (int i = 0; i < 10; ++i)
 	{
-		assert(IntArray_increment_size(&arr));
+		assert(IntArray_push_raw(&arr));
 		assert(arr.length == (size_t)(i + 1));
 		assert(arr.capacity == (size_t)(i + 1));
 		arr.buffer[arr.length - 1] = i * 3;
@@ -98,9 +98,9 @@ void test_IntArray_increment_size()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_push()
+void test_push()
 {
-	puts("\tTesting IntArray_push()");
+	puts("\tTesting push()");
 
 	IntArray arr = IntArray_init();
 
@@ -111,7 +111,7 @@ void test_IntArray_push()
 
 	for (int i = 0; i < count; ++i)
 	{
-		IntArray_push(&arr, i);
+		IntArray_push(&arr, values[i]);
 	}
 
 	for (int i = 0; i < count; ++i)
@@ -123,7 +123,7 @@ void test_IntArray_push()
 
 	for (int i = 0; i < count; ++i)
 	{
-		IntArray_push_ptr(&arr, &i);
+		IntArray_push_ptr(&arr, values + i);
 	}
 
 	for (int i = 0; i < count; ++i)
@@ -134,9 +134,9 @@ void test_IntArray_push()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_pushf()
+void test_pushf()
 {
-	puts("\tTesting IntArray_pushf()");
+	puts("\tTesting pushf()");
 
 	IntArray arr = IntArray_init();
 	
@@ -164,52 +164,48 @@ void test_IntArray_pushf()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_insert()
+void test_insert()
 {
-	puts("\tTesting IntArray_insert()");
+	puts("\tTesting insert()");
 
 	IntArray arr = IntArray_init();
 	
-	int value = 3;
-	IntArray_insert(&arr, 0, &value);	
+	IntArray_insert(&arr, 0, 3);	
 
 	assert(arr.length == 1);
 	assert(arr.capacity == 1);
 	assert(arr.buffer[0] == 3);
 
-	value = 5;
-	IntArray_insert(&arr, 1, &value);	
+	IntArray_insert(&arr, 1, 5);
 
 	assert(arr.length == 2);
 	assert(arr.capacity == 2);
-	assert(arr.buffer[0] == 3.2);
-	assert(arr.buffer[1] == 5.75);
+	assert(arr.buffer[0] == 3);
+	assert(arr.buffer[1] == 5);
 
-	value = 2.345;
-	IntArray_insert(&arr, 0, &value);
+	IntArray_insert(&arr, 0, 2);
 
 	assert(arr.length == 3);
 	assert(arr.capacity == 3);
-	assert(arr.buffer[0] == 2.345);
-	assert(arr.buffer[1] == 3.2);
-	assert(arr.buffer[2] == 5.75);
+	assert(arr.buffer[0] == 2);
+	assert(arr.buffer[1] == 3);
+	assert(arr.buffer[2] == 5);
 
-	value = 1.0;
-	IntArray_insert(&arr, 1, &value);
+	IntArray_insert(&arr, 1, 1);
 
 	assert(arr.length == 4);
 	assert(arr.capacity == 4);
-	assert(arr.buffer[0] == 2.345);
-	assert(arr.buffer[1] == 1.0);
-	assert(arr.buffer[2] == 3.2);
-	assert(arr.buffer[3] == 5.75);
+	assert(arr.buffer[0] == 2);
+	assert(arr.buffer[1] == 1);
+	assert(arr.buffer[2] == 3);
+	assert(arr.buffer[3] == 5);
 
 	IntArray_free(&arr);
 }
 
-void test_IntArray_pop()
+void test_pop()
 {
-	puts("\tTesting IntArray_pop()");
+	puts("\tTesting pop()");
 
 	IntArray arr = IntArray_init();
 	
@@ -234,9 +230,9 @@ void test_IntArray_pop()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_popf()
+void test_popf()
 {
-	puts("\tTesting IntArray_popf()");
+	puts("\tTesting popf()");
 
 	IntArray arr = IntArray_init();
 	
@@ -263,9 +259,9 @@ void test_IntArray_popf()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_erase()
+void test_erase()
 {
-	puts("\tTesting IntArray_erase()");
+	puts("\tTesting erase()");
 
 	IntArray arr = IntArray_init();
 	
@@ -293,9 +289,9 @@ void test_IntArray_erase()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_set()
+void test_set()
 {
-	puts("\tTesting IntArray_set()");
+	puts("\tTesting set()");
 
 	IntArray arr = IntArray_init();
 	
@@ -323,9 +319,9 @@ void test_IntArray_set()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_get()
+void test_get()
 {
-	puts("\tTesting IntArray_get()");
+	puts("\tTesting get()");
 
 	IntArray arr = IntArray_init();
 	
@@ -342,9 +338,9 @@ void test_IntArray_get()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_at()
+void test_at()
 {
-	puts("\tTesting IntArray_at()");
+	puts("\tTesting at()");
 
 	IntArray arr = IntArray_init();
 	IntArray_resize(&arr, 3);
@@ -365,9 +361,9 @@ void test_IntArray_at()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_front()
+void test_front()
 {
-	puts("\tTesting IntArray_front()");
+	puts("\tTesting front()");
 
 	IntArray arr = IntArray_init();
 	IntArray_resize(&arr, 3);
@@ -398,9 +394,9 @@ void test_IntArray_front()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_back()
+void test_back()
 {
-	puts("\tTesting IntArray_back()");
+	puts("\tTesting back()");
 
 	IntArray arr = IntArray_init();
 	IntArray_resize(&arr, 3);
@@ -431,9 +427,9 @@ void test_IntArray_back()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_swap()
+void test_swap()
 {
-	puts("\tTesting IntArray_swap()");
+	puts("\tTesting swap()");
 
 	IntArray arr = IntArray_init();
 	IntArray_resize(&arr, 3);
@@ -460,9 +456,9 @@ void test_IntArray_swap()
 	IntArray_free(&arr);
 }
 
-void test_IntArray_clear()
+void test_clear()
 {
-	puts("\tTesting IntArray_clear()");
+	puts("\tTesting clear()");
 
 	IntArray arr = IntArray_init();
 
@@ -485,22 +481,22 @@ int main(void)
 {
 	puts("Testing IntArray...");
 
-	test_IntArray_create();
-	test_IntArray_increment_size();
-	test_IntArray_resize();
-	test_IntArray_push();
-	test_IntArray_pushf();
-	test_IntArray_insert();
-	test_IntArray_pop();
-	test_IntArray_popf();
-	test_IntArray_erase();
-	test_IntArray_set();
-	test_IntArray_get();
-	test_IntArray_at();
-	test_IntArray_front();
-	test_IntArray_back();
-	test_IntArray_swap();
-	test_IntArray_clear();
+	test_create();
+	test_push_raw();
+	test_resize();
+	test_push();
+	test_pushf();
+	test_insert();
+	test_pop();
+	test_popf();
+	test_erase();
+	test_set();
+	test_get();
+	test_at();
+	test_front();
+	test_back();
+	test_swap();
+	test_clear();
 
 	puts("All tests passed");
 
